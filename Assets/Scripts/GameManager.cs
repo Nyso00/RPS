@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public enum RPS { None, Rock, Paper, Scissors }
 
@@ -75,7 +76,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void CheckGameOver()
+    private bool CheckGameOver()
     {
         if (player1.transform.position.x >= 10.0f)
         {
