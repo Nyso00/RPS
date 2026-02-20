@@ -3,13 +3,17 @@ using System.Collections;
 
 public enum RPS { None, Rock, Paper, Scissors }
 
-public class GameManager : MonoBehaviour
+public class GameManager : Singleton<GameManager>
 {
     public PlayerController player1;
     public PlayerController player2;
 
     public float roundDuration = 3.0f;
+    public float extraRoundDuration = 5.0f;
+    public float extraRoundDurationDecrement = 0.9f;
+
     public int maxRounds = 30;
+    public int maxExtraRounds = 10;
 
     private int currentRound = 0;
 
@@ -30,9 +34,9 @@ public class GameManager : MonoBehaviour
             player1.ResetChoice();
             player2.ResetChoice();
 
-            // make input available
-
+            InputManager.Instance.SetInputAvailable(true);
             yield return new WaitForSeconds(roundDuration);
+            InputManager.Instance.SetInputAvailable(false);
 
             int winner = FindWinner();
 

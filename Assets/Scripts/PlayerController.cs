@@ -1,20 +1,25 @@
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] private int frontSign;
-
+    [SerializeField] private int startPosition;
+    private Bridge bridge;
+    private int curPosition;
+ 
     private RPS currentChoice = RPS.None;
-    private int score = 0;
+
+    void Start()
+    {
+        bridge = Bridge.Instance;
+        curPosition = startPosition;
+        SetPosition(curPosition);
+    }
 
     public void ResetChoice()
     {
         currentChoice = RPS.None;
-    }
-
-    public RPS getChoice()
-    {
-        return currentChoice;
     }
 
     public RPS GetChoice()
@@ -29,6 +34,12 @@ public class PlayerController : MonoBehaviour
 
     public void Move(int direction)
     {
-        score += direction;
+        SetPosition(curPosition + direction);
+    }
+
+    private void SetPosition(int position)
+    {
+        curPosition = position;
+        transform.position = new Vector3(bridge.getBlockX(curPosition), transform.position.y, transform.position.z);
     }
 }
