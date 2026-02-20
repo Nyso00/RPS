@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 using System.Collections;
 
 public enum RPS { None, Rock, Paper, Scissors }
@@ -8,7 +10,21 @@ public class GameManager : Singleton<GameManager>
     public PlayerController player1;
     public PlayerController player2;
 
+    [SerializeField] private TextMeshProUGUI roundText;
+    [SerializeField] private Image timerGauge;
+    [SerializeField] private Image player1ChoiceImage;
+    [SerializeField] private Image player2ChoiceImage;
+
+    public Sprite rockSprite;
+    public Sprite paperSprite;
+    public Sprite scissorsSprite;
+
+
+    [Header("시간 변수")]
+    public float startDelay = 1.0f;
     public float roundDuration = 3.0f;
+    public float revealToMoveDelay = 0.5f;
+    public float moveToNextRoundDelay = 0.5f;
     public float extraRoundDuration = 5.0f;
     public float extraRoundDurationDecrement = 0.9f;
 
@@ -25,7 +41,7 @@ public class GameManager : Singleton<GameManager>
 
     IEnumerator PlayRounds()
     {
-        yield return new WaitForSeconds(2.0f); // Initial delay before starting rounds
+        yield return new WaitForSeconds(startDelay); // Initial delay before starting rounds
 
         while (currentRound < maxRounds)
         {
@@ -35,10 +51,24 @@ public class GameManager : Singleton<GameManager>
             player2.ResetChoice();
 
             InputManager.Instance.SetInputAvailable(true);
-            yield return new WaitForSeconds(roundDuration);
+            roundText.text = $"Round {currentRound}";
+
+            float passedTime = 0f;
+            while (passedTime < roundDuration)
+            {
+                passedTime += Time.deltaTime;
+
+                timerGauge.fillAmount = passedTime / roundDuration;
+
+                yield return null;
+            }
+            timerGauge.fillAmount = 1f;
+
             InputManager.Instance.SetInputAvailable(false);
 
             int winner = FindWinner();
+
+            yield return new WaitForSeconds(revealToMoveDelay); // Short delay before moving players
 
             if (winner == 1)
             {
@@ -51,10 +81,15 @@ public class GameManager : Singleton<GameManager>
                 player2.Move(-1);
             }
 
-            if (CheckGameOver())
-            {
-                break;
-            }
+            yield return new WaitForSeconds(moveToNextRoundDelay); // Short delay between rounds
+
+            player1ChoiceImage.gameObject.SetActive(false);
+            player2ChoiceImage.gameObject.SetActive(false);
+
+            // if (CheckGameOver())
+            // {
+            //     break;
+            // }
         }
     }
 
@@ -63,8 +98,20 @@ public class GameManager : Singleton<GameManager>
         RPS p1Choice = player1.GetChoice();
         RPS p2Choice = player2.GetChoice();
 
+        if (p1Choice != RPS.None)
+        {
+            player1ChoiceImage.sprite = GetChoiceSprite(p1Choice);
+            player1ChoiceImage.gameObject.SetActive(true);
+        }
+        if (p2Choice != RPS.None)
+        {
+            player2ChoiceImage.sprite = GetChoiceSprite(p2Choice);
+            player2ChoiceImage.gameObject.SetActive(true);
+        }
+
         if (p1Choice == p2Choice)
         {
+            Debug.Log($"It's a tie! Both players chose {p1Choice}");
             return 0;
         }
         else if ((p1Choice == RPS.Rock && p2Choice == RPS.Scissors) ||
@@ -72,10 +119,12 @@ public class GameManager : Singleton<GameManager>
                  (p1Choice == RPS.Scissors && p2Choice == RPS.Paper) ||
                  (p1Choice != RPS.None && p2Choice == RPS.None))
         {
+            Debug.Log($"Player 1 wins the round! ({p1Choice} beats {p2Choice})");
             return 1;
         }
         else
         {
+            Debug.Log($"Player 2 wins the round! ({p2Choice} beats {p1Choice})");
             return 2;
         }
     }
@@ -94,5 +143,20 @@ public class GameManager : Singleton<GameManager>
         }
         return false;
     }
-    
+
+    private Sprite GetChoiceSprite(RPS choice)
+    {
+        switch (choice)
+        {
+            case RPS.Rock:
+                return rockSprite;
+            case RPS.Paper:
+                return paperSprite;
+            case RPS.Scissors:
+                return scissorsSprite;
+            default:
+                return null;
+        }
+    }
+
 }
