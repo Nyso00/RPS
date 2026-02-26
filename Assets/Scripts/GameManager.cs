@@ -28,10 +28,13 @@ public class GameManager : Singleton<GameManager>
     public float extraRoundDuration = 5.0f;
     public float extraRoundDurationDecrement = 0.9f;
 
+    [Header("라운드 변수")]
     public int maxRounds = 30;
     public int maxExtraRounds = 10;
+    public int[] blockDestroyRounds = new int[4];
 
     private int currentRound = 0;
+    private int currentDestroyPhase = 0;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -52,6 +55,12 @@ public class GameManager : Singleton<GameManager>
 
             InputManager.Instance.SetInputAvailable(true);
             roundText.text = $"Round {currentRound}";
+
+            bool destroyBlock = currentDestroyPhase < blockDestroyRounds.Length && currentRound == blockDestroyRounds[currentDestroyPhase];
+            if (destroyBlock)
+            {
+                Bridge.Instance.BeforeDestroyBlock();
+            }
 
             float passedTime = 0f;
             while (passedTime < roundDuration)
@@ -81,15 +90,21 @@ public class GameManager : Singleton<GameManager>
                 player2.Move(-1);
             }
 
+            if (destroyBlock)
+            {
+                Bridge.Instance.DestroyBlock();
+                currentDestroyPhase++;
+            }
+
+            if (CheckGameOver())
+            {
+                yield break; // Exit the coroutine if the game is over
+            }
+
             yield return new WaitForSeconds(moveToNextRoundDelay); // Short delay between rounds
 
             player1ChoiceImage.gameObject.SetActive(false);
             player2ChoiceImage.gameObject.SetActive(false);
-
-            // if (CheckGameOver())
-            // {
-            //     break;
-            // }
         }
     }
 
@@ -131,14 +146,14 @@ public class GameManager : Singleton<GameManager>
 
     private bool CheckGameOver()
     {
-        if (player1.transform.position.x >= 10.0f)
-        {
-            Debug.Log("Player 1 Wins!");
-            return true;
-        }
-        else if (player2.transform.position.x <= -10.0f)
+        if (player1.HasLost())
         {
             Debug.Log("Player 2 Wins!");
+            return true;
+        }
+        else if (player2.HasLost())
+        {
+            Debug.Log("Player 1 Wins!");
             return true;
         }
         return false;

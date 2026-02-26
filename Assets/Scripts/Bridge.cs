@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Rendering;
+using System.Collections;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -9,13 +10,58 @@ public class Bridge : Singleton<Bridge>
 {
     public GameObject[] blocks;
     public float blockSpacing = 2.0f;
+    public float blinkSpeed = 2.0f;
+    private int destroyedIdx = 0;
+    private Coroutine blinkCoroutine;
 
     public float getBlockX(int index)
     {
         if (blocks == null || index < 0 || index >= blocks.Length)
             return 0f;
-        
+
         return blocks[index].transform.position.x;
+    }
+
+    public void BeforeDestroyBlock()
+    {
+        destroyedIdx++;
+        blinkCoroutine = StartCoroutine(BlinkBlock());
+    }
+
+    IEnumerator BlinkBlock()
+    {
+        float elapsedTime = 0f;
+        Renderer leftBlockRenderer = blocks[destroyedIdx].GetComponent<Renderer>();
+        Renderer rightBlockRenderer = blocks[blocks.Length - destroyedIdx - 1].GetComponent<Renderer>();
+
+        Color blockColor = leftBlockRenderer.material.color;
+
+        while (true)
+        {
+            float alpha = Mathf.PingPong(elapsedTime * blinkSpeed + 1f, 1f);
+            blockColor.a = alpha;
+
+            leftBlockRenderer.material.color = blockColor;
+            rightBlockRenderer.material.color = blockColor;
+
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+    }
+
+    public void DestroyBlock()
+    {
+        if (blinkCoroutine != null)
+        {
+            StopCoroutine(blinkCoroutine);
+        }
+        blocks[destroyedIdx].SetActive(false);
+        blocks[blocks.Length - destroyedIdx - 1].SetActive(false);
+    }
+
+    public bool IsOutOfRange(int pos)
+    {
+        return pos <= destroyedIdx || pos >= blocks.Length - 1 - destroyedIdx;
     }
 }
 
