@@ -1,16 +1,11 @@
 using UnityEngine;
 
-public class CameraController : MonoBehaviour
+public class CameraController : Singleton<CameraController>
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+    public Transform player1, player2;
 
-    // Update is called once per frame
-    void Update()
+    public void MoveCamera()
     {
-        
+        transform.position = new Vector3((player1.position.x + player2.position.x) / 2, transform.position.y, transform.position.z);
     }
 }

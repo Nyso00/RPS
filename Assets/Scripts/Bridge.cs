@@ -24,15 +24,14 @@ public class Bridge : Singleton<Bridge>
 
     public void BeforeDestroyBlock()
     {
-        destroyedIdx++;
         blinkCoroutine = StartCoroutine(BlinkBlock());
     }
 
     IEnumerator BlinkBlock()
     {
         float elapsedTime = 0f;
-        Renderer leftBlockRenderer = blocks[destroyedIdx].GetComponent<Renderer>();
-        Renderer rightBlockRenderer = blocks[blocks.Length - destroyedIdx - 1].GetComponent<Renderer>();
+        Renderer leftBlockRenderer = blocks[destroyedIdx + 1].GetComponent<Renderer>();
+        Renderer rightBlockRenderer = blocks[blocks.Length - destroyedIdx - 2].GetComponent<Renderer>();
 
         Color blockColor = leftBlockRenderer.material.color;
 
@@ -55,6 +54,7 @@ public class Bridge : Singleton<Bridge>
         {
             StopCoroutine(blinkCoroutine);
         }
+        destroyedIdx++;
         blocks[destroyedIdx].SetActive(false);
         blocks[blocks.Length - destroyedIdx - 1].SetActive(false);
     }

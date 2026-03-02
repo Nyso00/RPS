@@ -1,8 +1,11 @@
 using UnityEngine;
-using UnityEngine.UIElements;
+using UnityEngine.UI;
+using System.Collections;
 
 public class PlayerController : MonoBehaviour
 {
+    public Image checkMarkImage;
+    public float drawSpeed = 2.0f;
     [SerializeField] private int frontSign;
     [SerializeField] private int startPosition;
     private Bridge bridge;
@@ -15,11 +18,13 @@ public class PlayerController : MonoBehaviour
         bridge = Bridge.Instance;
         curPosition = startPosition;
         SetPosition(curPosition);
+        checkMarkImage.fillAmount = 0f;
     }
 
     public void ResetChoice()
     {
         currentChoice = RPS.None;
+        checkMarkImage.fillAmount = 0f;
     }
 
     public RPS GetChoice()
@@ -30,6 +35,11 @@ public class PlayerController : MonoBehaviour
     public void SetChoice(RPS choice)
     {
         currentChoice = choice;
+        if (choice != RPS.None)
+        {
+            StopCoroutine("DrawCheckMark");
+            StartCoroutine(DrawCheckMark());
+        }
     }
 
     public void Move(int direction)
@@ -46,5 +56,17 @@ public class PlayerController : MonoBehaviour
     {
         curPosition = position;
         transform.position = new Vector3(bridge.getBlockX(curPosition), transform.position.y, transform.position.z);
+    }
+
+    private IEnumerator DrawCheckMark()
+    {
+        checkMarkImage.fillAmount = 0f;
+        while (checkMarkImage.fillAmount < 1f)
+        {
+            checkMarkImage.fillAmount += Time.deltaTime * drawSpeed;
+            yield return null;
+        }
+
+        checkMarkImage.fillAmount = 1f;
     }
 }

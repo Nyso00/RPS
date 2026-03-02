@@ -27,6 +27,7 @@ public class GameManager : Singleton<GameManager>
     public float moveToNextRoundDelay = 0.5f;
     public float extraRoundDuration = 5.0f;
     public float extraRoundDurationDecrement = 0.9f;
+    public float extraRoundStartDelay = 1.0f;
 
     [Header("라운드 변수")]
     public int maxRounds = 30;
@@ -42,25 +43,41 @@ public class GameManager : Singleton<GameManager>
         StartCoroutine(PlayRounds());
     }
 
-    IEnumerator PlayRounds()
+    private IEnumerator PlayRounds()
     {
         yield return new WaitForSeconds(startDelay); // Initial delay before starting rounds
 
-        while (currentRound < maxRounds)
+        while (currentRound < maxRounds + maxExtraRounds)
         {
+            timerGauge.fillAmount = 0f;
             currentRound++;
 
             player1.ResetChoice();
             player2.ResetChoice();
 
-            InputManager.Instance.SetInputAvailable(true);
-            roundText.text = $"Round {currentRound}";
+            if (currentRound == maxRounds + 1)
+            {
+                roundText.text = "Ready for Extra Round...";
+                roundDuration = extraRoundDuration;
+                yield return new WaitForSeconds(extraRoundStartDelay);
+                roundText.text = "Extra Round!";
+            }
+            else if (IsExtraRound())
+            {
+                roundDuration *= extraRoundDurationDecrement;
+            }
+            else
+            {
+                roundText.text = $"Round {currentRound}";
+            }
 
             bool destroyBlock = currentDestroyPhase < blockDestroyRounds.Length && currentRound == blockDestroyRounds[currentDestroyPhase];
             if (destroyBlock)
             {
                 Bridge.Instance.BeforeDestroyBlock();
             }
+
+            InputManager.Instance.SetInputAvailable(true);
 
             float passedTime = 0f;
             while (passedTime < roundDuration)
@@ -83,22 +100,32 @@ public class GameManager : Singleton<GameManager>
             {
                 player1.Move(1);
                 player2.Move(1);
+                CameraController.Instance.MoveCamera();
             }
             else if (winner == 2)
             {
                 player1.Move(-1);
                 player2.Move(-1);
+                CameraController.Instance.MoveCamera();
+            }
+
+            if (CheckGameOver())
+            {
+                player1ChoiceImage.gameObject.SetActive(false);
+                player2ChoiceImage.gameObject.SetActive(false);
+                yield break; // Exit the coroutine if the game is over
             }
 
             if (destroyBlock)
             {
                 Bridge.Instance.DestroyBlock();
                 currentDestroyPhase++;
-            }
-
-            if (CheckGameOver())
-            {
-                yield break; // Exit the coroutine if the game is over
+                if (CheckGameOver())
+                {
+                    player1ChoiceImage.gameObject.SetActive(false);
+                    player2ChoiceImage.gameObject.SetActive(false);
+                    yield break; // Exit the coroutine if the game is over
+                }
             }
 
             yield return new WaitForSeconds(moveToNextRoundDelay); // Short delay between rounds
@@ -106,6 +133,8 @@ public class GameManager : Singleton<GameManager>
             player1ChoiceImage.gameObject.SetActive(false);
             player2ChoiceImage.gameObject.SetActive(false);
         }
+
+        roundText.text = "Draw!";
     }
 
     private int FindWinner()
@@ -149,11 +178,13 @@ public class GameManager : Singleton<GameManager>
         if (player1.HasLost())
         {
             Debug.Log("Player 2 Wins!");
+            roundText.text = "Player 2 Wins!";
             return true;
         }
         else if (player2.HasLost())
         {
             Debug.Log("Player 1 Wins!");
+            roundText.text = "Player 1 Wins!";
             return true;
         }
         return false;
@@ -172,6 +203,11 @@ public class GameManager : Singleton<GameManager>
             default:
                 return null;
         }
+    }
+
+    private bool IsExtraRound()
+    {
+        return currentRound > maxRounds;
     }
 
 }
