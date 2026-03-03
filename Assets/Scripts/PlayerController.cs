@@ -4,16 +4,16 @@ using System.Collections;
 
 public class PlayerController : MonoBehaviour
 {
-    public Image checkMarkImage;
-    public float drawSpeed = 2.0f;
-    [SerializeField] private int frontSign;
+    [SerializeField] private Image checkMarkImage;
+    [SerializeField] private float drawSpeed = 2.0f;
     [SerializeField] private int startPosition;
+
     private Bridge bridge;
     private int curPosition;
-
     private RPS currentChoice = RPS.None;
+    private Coroutine checkMarkCoroutine;
 
-    void Start()
+    private void Start()
     {
         bridge = Bridge.Instance;
         curPosition = startPosition;
@@ -37,8 +37,11 @@ public class PlayerController : MonoBehaviour
         currentChoice = choice;
         if (choice != RPS.None)
         {
-            StopCoroutine("DrawCheckMark");
-            StartCoroutine(DrawCheckMark());
+            if (checkMarkCoroutine != null)
+            {
+                StopCoroutine(checkMarkCoroutine);
+            }
+            checkMarkCoroutine = StartCoroutine(DrawCheckMark());
         }
     }
 
@@ -55,7 +58,7 @@ public class PlayerController : MonoBehaviour
     private void SetPosition(int position)
     {
         curPosition = position;
-        transform.position = new Vector3(bridge.getBlockX(curPosition), transform.position.y, transform.position.z);
+        transform.position = new Vector3(bridge.GetBlockX(curPosition), transform.position.y, transform.position.z);
     }
 
     private IEnumerator DrawCheckMark()

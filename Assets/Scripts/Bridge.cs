@@ -10,11 +10,12 @@ public class Bridge : Singleton<Bridge>
 {
     public GameObject[] blocks;
     public float blockSpacing = 2.0f;
-    public float blinkSpeed = 2.0f;
+    [SerializeField] private float blinkSpeed = 2.0f;
+
     private int destroyedIdx = 0;
     private Coroutine blinkCoroutine;
 
-    public float getBlockX(int index)
+    public float GetBlockX(int index)
     {
         if (blocks == null || index < 0 || index >= blocks.Length)
             return 0f;
@@ -27,7 +28,7 @@ public class Bridge : Singleton<Bridge>
         blinkCoroutine = StartCoroutine(BlinkBlock());
     }
 
-    IEnumerator BlinkBlock()
+    private IEnumerator BlinkBlock()
     {
         float elapsedTime = 0f;
         Renderer leftBlockRenderer = blocks[destroyedIdx + 1].GetComponent<Renderer>();
@@ -65,6 +66,11 @@ public class Bridge : Singleton<Bridge>
     }
 }
 
+
+/*
+    Bridge의 블록을 Editor에서 자동으로 배치하는 스크립트입니다.
+    Bridge 오브젝트에 있는 blocks 배열에 블록들을 할당하고 block spacing을 설정하면, "Arrange Blocks" 버튼을 누르면 블록들이 균등하게 배치됩니다.
+*/
 #if UNITY_EDITOR
 [CustomEditor(typeof(Bridge))]
 public class BridgeEditor : Editor
@@ -73,7 +79,7 @@ public class BridgeEditor : Editor
     {
         DrawDefaultInspector();
 
-        Bridge bridge = (Bridge)target;
+        Bridge bridge = (Bridge) target;
         if (GUILayout.Button("Arrange Blocks"))
         {
             ArrangeBlocks(bridge);
@@ -83,9 +89,11 @@ public class BridgeEditor : Editor
     private void ArrangeBlocks(Bridge bridge)
     {
         if (bridge == null || bridge.blocks == null || bridge.blocks.Length == 0)
+        {
             return;
+        }
 
-        float firstBlockX = bridge.transform.position.x - ((bridge.blocks.Length - 1) * bridge.blockSpacing) / 2;
+        float firstBlockX = bridge.transform.position.x - (bridge.blocks.Length - 1) * bridge.blockSpacing / 2;
 
         for (int i = 0; i < bridge.blocks.Length; i++)
         {
