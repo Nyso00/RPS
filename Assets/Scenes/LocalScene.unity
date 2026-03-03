@@ -3834,9 +3834,9 @@ MonoBehaviour:
   roundDuration: 3
   revealToMoveDelay: 0.5
   moveToNextRoundDelay: 0.5
+  extraRoundStartDelay: 1
   extraRoundDuration: 4
   extraRoundDurationDecrement: 0.8
-  extraRoundStartDelay: 1
   maxRounds: 5
   maxExtraRounds: 5
   blockDestroyRounds: 01000000020000000300000004000000
@@ -4248,8 +4248,8 @@ SceneRoots:
   - {fileID: 92562533}
   - {fileID: 1723008319}
   - {fileID: 2011227004}
-  - {fileID: 1961196344}
   - {fileID: 829531419}
   - {fileID: 1144048702}
   - {fileID: 1446249431}
+  - {fileID: 1961196344}
   - {fileID: 562210315}

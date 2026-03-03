@@ -5,7 +5,7 @@ using System.Collections;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] private Image checkMarkImage;
-    [SerializeField] private float drawSpeed = 2.0f;
+    [SerializeField] private float drawSpeed = 3.0f;
     [SerializeField] private PlayerNum playerNum;
 
     private int curPosition;
@@ -32,10 +32,7 @@ public class PlayerController : MonoBehaviour
         checkMarkImage.fillAmount = 0f;
     }
 
-    public RPS GetChoice()
-    {
-        return currentChoice;
-    }
+    public RPS GetChoice() => currentChoice;
 
     public void SetChoice(RPS choice)
     {

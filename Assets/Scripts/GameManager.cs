@@ -25,9 +25,9 @@ public class GameManager : Singleton<GameManager>
     [SerializeField] private float roundDuration = 3.0f;
     [SerializeField] private float revealToMoveDelay = 0.5f;
     [SerializeField] private float moveToNextRoundDelay = 0.5f;
+    [SerializeField] private float extraRoundStartDelay = 1.0f;
     [SerializeField] private float extraRoundDuration = 5.0f;
     [SerializeField] private float extraRoundDurationDecrement = 0.9f;
-    [SerializeField] private float extraRoundStartDelay = 1.0f;
 
     [Header("라운드 변수")]
     [SerializeField] private int maxRounds = 30;
