@@ -6,17 +6,22 @@ public class PlayerController : MonoBehaviour
 {
     [SerializeField] private Image checkMarkImage;
     [SerializeField] private float drawSpeed = 2.0f;
-    [SerializeField] private int startPosition;
+    [SerializeField] private PlayerNum playerNum;
 
-    private Bridge bridge;
     private int curPosition;
     private RPS currentChoice = RPS.None;
     private Coroutine checkMarkCoroutine;
 
     private void Start()
     {
-        bridge = Bridge.Instance;
-        curPosition = startPosition;
+        if (playerNum == PlayerNum.Player1)
+        {
+            curPosition = Bridge.Instance.blockCountOfOneSide;
+        }
+        else // if (playerNum == PlayerNum.Player2)
+        {
+            curPosition = Bridge.Instance.blockCountOfOneSide + 1;
+        }
         SetPosition(curPosition);
         checkMarkImage.fillAmount = 0f;
     }
@@ -52,13 +57,13 @@ public class PlayerController : MonoBehaviour
 
     public bool HasLost()
     {
-        return bridge.IsOutOfRange(curPosition);
+        return Bridge.Instance.IsOutOfRange(curPosition);
     }
 
     private void SetPosition(int position)
     {
         curPosition = position;
-        transform.position = new Vector3(bridge.GetBlockX(curPosition), transform.position.y, transform.position.z);
+        transform.position = new Vector3(Bridge.Instance.GetBlockX(curPosition), transform.position.y, transform.position.z);
     }
 
     private IEnumerator DrawCheckMark()

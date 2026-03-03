@@ -5,3 +5,9 @@ public enum RPS
     Paper,
     Scissors
 }
+
+public enum PlayerNum
+{
+    Player1,
+    Player2
+}
