@@ -3837,9 +3837,9 @@ MonoBehaviour:
   extraRoundStartDelay: 1
   extraRoundDuration: 4
   extraRoundDurationDecrement: 0.8
-  maxRounds: 5
-  maxExtraRounds: 5
-  blockDestroyRounds: 01000000020000000300000004000000
+  maxRounds: 25
+  maxExtraRounds: 7
+  blockDestroyRounds: 0a0000000f0000001400000019000000
 --- !u!4 &1961196344
 Transform:
   m_ObjectHideFlags: 0

@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
+using Unity.Netcode;
+using System;
 
 public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
 {
@@ -34,13 +36,35 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
     [SerializeField] private int maxExtraRounds = 10;
     [SerializeField] private int[] blockDestroyRounds = new int[4];
 
+    private NetworkVariable<float> timerFillAmount = new(0f);
+
     private int currentRound = 0;
     private int currentDestroyPhase = 0;
     private enum RoundResult { Draw, Player1Win, Player2Win }
 
+    public override void OnNetworkSpawn()
+    {
+        // if (IsClient)
+        timerFillAmount.OnValueChanged += OnTimerFillAmountChanged;
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        // if (IsClient)
+        timerFillAmount.OnValueChanged -= OnTimerFillAmountChanged;
+    }
+
+    private void OnTimerFillAmountChanged(float oldValue, float newValue)
+    {
+        timerGauge.fillAmount = newValue;
+    }
+
     private void Start()
     {
-        StartCoroutine(PlayRounds());
+        if (IsServer)
+        {
+            StartCoroutine(PlayRounds());
+        }
     }
 
     private IEnumerator PlayRounds()
@@ -78,21 +102,21 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
             HideChoiceImages();
         }
 
-        roundText.text = "Draw!";
+        UpdateRoundTextClientRpc("Draw!");
     }
 
     private IEnumerator SetupRoundRoutine()
     {
-        timerGauge.fillAmount = 0f;
+        timerFillAmount.Value = 0f;
         player1.ResetChoice();
         player2.ResetChoice();
 
         if (currentRound == maxRounds + 1)
         {
-            roundText.text = "Ready for Extra Round...";
+            UpdateRoundTextClientRpc("Ready for Extra Round...");
             roundDuration = extraRoundDuration;
             yield return new WaitForSeconds(extraRoundStartDelay);
-            roundText.text = "Extra Round!";
+            UpdateRoundTextClientRpc("Extra Round!");
         }
         else if (currentRound > maxRounds)
         {
@@ -100,7 +124,7 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
         }
         else
         {
-            roundText.text = $"Round {currentRound}";
+            UpdateRoundTextClientRpc($"Round {currentRound}");
         }
 
         if (ShouldDestroyBlock())
@@ -111,20 +135,20 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
 
     private IEnumerator TimerRoutine()
     {
-        NetworkInputManager.Instance.SetInputAvailable(true);
+        SetInputAvailableClientRpc(true);
 
         float passedTime = 0f;
         while (passedTime < roundDuration)
         {
             passedTime += Time.deltaTime;
 
-            timerGauge.fillAmount = passedTime / roundDuration;
+            timerFillAmount.Value = passedTime / roundDuration;
 
             yield return null;
         }
-        timerGauge.fillAmount = 1f;
+        timerFillAmount.Value = 1f;
 
-        InputManager.Instance.SetInputAvailable(false);
+        SetInputAvailableClientRpc(false);
     }
 
     private IEnumerator EvaluateRoutine()
@@ -211,13 +235,13 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
         if (player1.HasLost())
         {
             Debug.Log("Player 2 Wins!");
-            roundText.text = "Player 2 Wins!";
+            UpdateRoundTextClientRpc("Player 2 Wins!");
             return true;
         }
         else if (player2.HasLost())
         {
             Debug.Log("Player 1 Wins!");
-            roundText.text = "Player 1 Wins!";
+            UpdateRoundTextClientRpc("Player 1 Wins!");
             return true;
         }
         return false;
@@ -232,5 +256,19 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
             RPS.Scissors => scissorsSprite,
             _ => null,
         };
+    }
+
+
+
+    [ClientRpc]
+    private void UpdateRoundTextClientRpc(string text)
+    {
+        roundText.text = text;
+    }
+
+    [ClientRpc]
+    private void SetInputAvailableClientRpc(bool available)
+    {
+        NetworkInputManager.Instance.SetInputAvailable(available);
     }
 }
