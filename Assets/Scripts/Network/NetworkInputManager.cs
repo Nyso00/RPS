@@ -1,7 +1,7 @@
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class NetworkInputManager : NetworkSingleton<NetworkInputManager>
+public class NetworkInputManager : Singleton<NetworkInputManager>
 {
     [SerializeField] private GameObject playerButtonUI;
     private GameControls controls;
@@ -29,9 +29,8 @@ public class NetworkInputManager : NetworkSingleton<NetworkInputManager>
         playerButtonUI.SetActive(available);
     }
 
-    public override void OnDestroy()
+    private void OnDestroy()
     {
         controls?.Dispose();
-        base.OnDestroy();
     }
 }

@@ -37,32 +37,34 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
     [SerializeField] private int[] blockDestroyRounds = new int[4];
 
     private NetworkVariable<float> timerFillAmount = new(0f);
+    private NetworkVariable<int> roundNum = new(0);
+    private NetworkVariable<RPS> p1RevealedChoice = new(RPS.None);
+    private NetworkVariable<RPS> p2RevealedChoice = new(RPS.None);
+    private NetworkVariable<GameState> gameState = new(GameState.WaitingForPlayers);
+    private int p1Score = 0;
+    private int p2Score = 0;
 
     private int currentRound = 0;
     private int currentDestroyPhase = 0;
     private enum RoundResult { Draw, Player1Win, Player2Win }
 
+    private ulong p1ClientId;
+    private ulong p2ClientId;
+
     public override void OnNetworkSpawn()
-    {
-        // if (IsClient)
-        timerFillAmount.OnValueChanged += OnTimerFillAmountChanged;
-    }
-
-    public override void OnNetworkDespawn()
-    {
-        // if (IsClient)
-        timerFillAmount.OnValueChanged -= OnTimerFillAmountChanged;
-    }
-
-    private void OnTimerFillAmountChanged(float oldValue, float newValue)
-    {
-        timerGauge.fillAmount = newValue;
-    }
-
-    private void Start()
     {
         if (IsServer)
         {
+            p1ClientId = NetworkManager.LocalClientId;
+            NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+        }
+    }
+
+    private void OnClientConnected(ulong clientId)
+    {
+        if (NetworkManager.Singleton.ConnectedClients.Count == 2)
+        {
+            p2ClientId = clientId;
             StartCoroutine(PlayRounds());
         }
     }
@@ -108,6 +110,8 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
     private IEnumerator SetupRoundRoutine()
     {
         timerFillAmount.Value = 0f;
+
+        //FIXME
         player1.ResetChoice();
         player2.ResetChoice();
 
@@ -129,7 +133,7 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
 
         if (ShouldDestroyBlock())
         {
-            Bridge.Instance.BeforeDestroyBlock();
+            BlinkBlockClientRpc();
         }
     }
 
@@ -258,7 +262,7 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
         };
     }
 
-
+    //========================= Client RPCs ========================
 
     [ClientRpc]
     private void UpdateRoundTextClientRpc(string text)
@@ -270,5 +274,11 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
     private void SetInputAvailableClientRpc(bool available)
     {
         NetworkInputManager.Instance.SetInputAvailable(available);
+    }
+
+    [ClientRpc]
+    private void BlinkBlockClientRpc()
+    {
+        Bridge.Instance.BeforeDestroyBlock();
     }
 }
