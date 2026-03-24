@@ -22,9 +22,10 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
     [Header("라운드 변수")]
     [SerializeField] private int _maxRounds = 30;
     [SerializeField] private int _maxExtraRounds = 10;
-    [SerializeField] private int _scoreToWin = 5;
     [SerializeField] private int[] _blockDestroyRounds = new int[4];
 
+
+    //-------------------------------- Network Variables -------------------------------------
     [HideInInspector] public NetworkVariable<float> TimerFillAmount = new(0f);
     [HideInInspector] public NetworkVariable<int> RoundNum = new(0);
     [HideInInspector] public NetworkVariable<RPS> P1RevealedChoice = new(RPS.None);
@@ -32,15 +33,17 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
     [HideInInspector] public NetworkVariable<GameState> State = new(GameState.WaitingForPlayers);
     [HideInInspector] public NetworkVariable<bool> IsDestroyPhase = new(false);
 
-    [HideInInspector] public NetworkVariable<ulong> P1ClientId = new NetworkVariable<ulong>(ulong.MaxValue);
-    [HideInInspector] public NetworkVariable<ulong> P2ClientId = new NetworkVariable<ulong>(ulong.MaxValue);
+    [HideInInspector] public NetworkVariable<ulong> P1ClientId = new(ulong.MaxValue);
+    [HideInInspector] public NetworkVariable<ulong> P2ClientId = new(ulong.MaxValue);
     [HideInInspector] public NetworkVariable<int> P1SubmitCount = new(0);
     [HideInInspector] public NetworkVariable<int> P2SubmitCount = new(0);
 
-    [HideInInspector] public int GameScore => _p1Score - _p2Score;
+    [HideInInspector] public NetworkVariable<int> P1Score = new(0);
+    [HideInInspector] public NetworkVariable<int> P2Score = new(0);
+    [HideInInspector] public int GameScore => P1Score.Value - P2Score.Value;
+    //-----------------------------------------------------------------------------------------
 
-    private int _p1Score = 0;
-    private int _p2Score = 0;
+    private int _scoreToWin;
     private RPS _p1Choice = RPS.None;
     private RPS _p2Choice = RPS.None;
 
@@ -54,6 +57,7 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
         {
             P1ClientId.Value = NetworkManager.LocalClientId;
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+            _scoreToWin = Bridge.Instance.BlockCountOfOneSide;
         }
     }
 
@@ -87,6 +91,7 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
             // 4. 1차 게임 오버 체크
             if (CheckGameOver())
             {
+                State.Value = GameState.GameOver;
                 yield break;
             }
 
@@ -98,6 +103,9 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
     {
         _p1Choice = RPS.None;
         _p2Choice = RPS.None;
+
+        P1SubmitCount.Value = 0;
+        P2SubmitCount.Value = 0;
 
         if (RoundNum.Value == _maxRounds + 1)
         {
@@ -139,14 +147,15 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
 
         if (winner == RoundResult.Player1Win)
         {
-            _p1Score++;
+            P1Score.Value++;
         }
         else if (winner == RoundResult.Player2Win)
         {
-            _p2Score++;
+            P2Score.Value++;
         }
 
-        CameraController.Instance.MoveCamera();
+        State.Value = GameState.Move;
+        yield return new WaitForSeconds(MoveDuration);
     }
 
     private bool ShouldDestroyBlock()

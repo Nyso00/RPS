@@ -26,12 +26,12 @@ public class VisualManager : MonoBehaviour
     [SerializeField] private Transform _enemyCharacter;
 
     private NetworkGameManager gm;
-    private bool _isPlayer1;
+    private bool IsPlayer1 => NetworkManager.Singleton.LocalClientId == gm.P1ClientId.Value;
 
     private Coroutine _myCheckMarkCoroutine;
     private Coroutine _enemyCheckMarkCoroutine;
 
-    private int CurrentScore => _isPlayer1 ? gm.GameScore : -gm.GameScore;
+    private int CurrentScore => IsPlayer1 ? gm.GameScore : -gm.GameScore;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     private void Start()
@@ -41,24 +41,34 @@ public class VisualManager : MonoBehaviour
         gm.State.OnValueChanged += (oldVal, newVal) => OnGameStateChanged(oldVal, newVal);
         UpdateUIState(gm.State.Value);
 
-        _isPlayer1 = NetworkManager.Singleton.LocalClientId == gm.P1ClientId.Value;
-        if (_isPlayer1)
+        gm.P1SubmitCount.OnValueChanged += (oldVal, newVal) =>
         {
-            gm.P1SubmitCount.OnValueChanged += (oldVal, newVal) => DrawMyCheckMark();
-            gm.P2SubmitCount.OnValueChanged += (oldVal, newVal) => DrawEnemyCheckMark();
-        }
-        else
+            if (newVal > 0)
+            {
+                if (IsPlayer1) DrawMyCheckMark();
+                else DrawEnemyCheckMark();
+            }
+        };
+        gm.P2SubmitCount.OnValueChanged += (oldVal, newVal) =>
         {
-            gm.P1SubmitCount.OnValueChanged += (oldVal, newVal) => DrawEnemyCheckMark();
-            gm.P2SubmitCount.OnValueChanged += (oldVal, newVal) => DrawMyCheckMark();
-        }
+            if (newVal > 0)
+            {
+                if (IsPlayer1) DrawEnemyCheckMark();
+                else DrawMyCheckMark();
+            }
+        };
 
         _myCharacter.position = new Vector3(Bridge.Instance.GetBlockX(0, true), _myCharacter.position.y, _myCharacter.position.z);
         _enemyCharacter.position = new Vector3(Bridge.Instance.GetBlockX(0, false), _enemyCharacter.position.y, _enemyCharacter.position.z);
     }
-
     private void OnGameStateChanged(GameState oldState, GameState newState)
     {
+        StartCoroutine(HandleStateChangeRoutine(newState));
+    }
+
+    private IEnumerator HandleStateChangeRoutine(GameState newState)
+    {
+        yield return null; // Wait one frame to ensure all state changes are processed
         UpdateUIState(newState);
     }
 
@@ -82,6 +92,8 @@ public class VisualManager : MonoBehaviour
                 HideChoiceImages();
                 _playerButtonUI.SetActive(true);
                 _roundText.text = gm.IsExtraRound() ? "Extra Round" : $"Round {gm.RoundNum.Value}";
+
+                Debug.Log($"IsDestroyPhase: {gm.IsDestroyPhase.Value}");
                 if (gm.IsDestroyPhase.Value)
                 {
                     Bridge.Instance.BeforeDestroyBlock();
@@ -94,6 +106,8 @@ public class VisualManager : MonoBehaviour
                 break;
 
             case GameState.Move:
+                _myCheckMarkImage.fillAmount = 0f;
+                _enemyCheckMarkImage.fillAmount = 0f;
                 if (gm.IsDestroyPhase.Value)
                 {
                     Bridge.Instance.DestroyBlock();
@@ -126,7 +140,7 @@ public class VisualManager : MonoBehaviour
 
         RPS myChoice, enemyChoice;
 
-        if (_isPlayer1)
+        if (IsPlayer1)
         {
             myChoice = gm.P1RevealedChoice.Value;
             enemyChoice = gm.P2RevealedChoice.Value;
@@ -179,10 +193,10 @@ public class VisualManager : MonoBehaviour
         Vector3 enemyStartPos = _enemyCharacter.position;
 
         float mytargetX = Bridge.Instance.GetBlockX(score, true);
-        Vector3 myTargetPos = new Vector3(mytargetX, myStartPos.y, myStartPos.z);
+        Vector3 myTargetPos = new(mytargetX, myStartPos.y, myStartPos.z);
 
         float enemyTargetX = Bridge.Instance.GetBlockX(score, false);
-        Vector3 enemyTargetPos = new Vector3(enemyTargetX, enemyStartPos.y, enemyStartPos.z);
+        Vector3 enemyTargetPos = new(enemyTargetX, enemyStartPos.y, enemyStartPos.z);
 
         float elapsedTime = 0f;
         while (elapsedTime < gm.MoveDuration)

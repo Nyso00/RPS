@@ -1544,7 +1544,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NetworkGameManager
   ShowTopMostFoldoutHeaderGroup: 1
   _startDelay: 1
-  _roundDuration: 3
+  _roundDuration: 1
   _revealToMoveDelay: 0.5
   _moveToNextRoundDelay: 0.5
   _extraRoundStartDelay: 1
@@ -1553,8 +1553,7 @@ MonoBehaviour:
   MoveDuration: 1
   _maxRounds: 30
   _maxExtraRounds: 10
-  _scoreToWin: 5
-  _blockDestroyRounds: 0a0000000f0000001400000019000000
+  _blockDestroyRounds: 020000000f0000001400000019000000
   TimerFillAmount:
     m_InternalValue: 0
   RoundNum:
@@ -1574,6 +1573,10 @@ MonoBehaviour:
   P1SubmitCount:
     m_InternalValue: 0
   P2SubmitCount:
+    m_InternalValue: 0
+  P1Score:
+    m_InternalValue: 0
+  P2Score:
     m_InternalValue: 0
 --- !u!4 &873261310
 Transform:
