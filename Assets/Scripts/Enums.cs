@@ -15,8 +15,10 @@ public enum PlayerNum
 public enum GameState
 {
     WaitingForPlayers,
-    Countdown,
-    Reveal,
-    RoundEnd,
+    Ready,
+    Playing,
+    Result,
+    Move,
+    ReadyForExtraRound,
     GameOver
 }

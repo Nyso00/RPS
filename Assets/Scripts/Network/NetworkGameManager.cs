@@ -4,58 +4,55 @@ using TMPro;
 using System.Collections;
 using Unity.Netcode;
 using System;
+using System.Threading;
+using NUnit.Framework;
 
 public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
 {
-    [Header("플레이어")]
-    public NetworkPlayerController player1;
-    public NetworkPlayerController player2;
-
-    [Header("UI 요소")]
-    [SerializeField] private TextMeshProUGUI roundText;
-    [SerializeField] private Image timerGauge;
-    [SerializeField] private Image player1ChoiceImage;
-    [SerializeField] private Image player2ChoiceImage;
-
-    [SerializeField] private Sprite rockSprite;
-    [SerializeField] private Sprite paperSprite;
-    [SerializeField] private Sprite scissorsSprite;
-
-
     [Header("시간 변수")]
-    [SerializeField] private float startDelay = 1.0f;
-    [SerializeField] private float roundDuration = 3.0f;
-    [SerializeField] private float revealToMoveDelay = 0.5f;
-    [SerializeField] private float moveToNextRoundDelay = 0.5f;
-    [SerializeField] private float extraRoundStartDelay = 1.0f;
-    [SerializeField] private float extraRoundDuration = 5.0f;
-    [SerializeField] private float extraRoundDurationDecrement = 0.9f;
+    [SerializeField] private float _startDelay = 1.0f;
+    [SerializeField] private float _roundDuration = 3.0f;
+    [SerializeField] private float _revealToMoveDelay = 0.5f;
+    [SerializeField] private float _moveToNextRoundDelay = 0.5f;
+    [SerializeField] private float _extraRoundStartDelay = 1.0f;
+    [SerializeField] private float _extraRoundDuration = 5.0f;
+    [SerializeField] private float _extraRoundDurationDecrement = 0.9f;
+    public float MoveDuration = 1.0f;
 
     [Header("라운드 변수")]
-    [SerializeField] private int maxRounds = 30;
-    [SerializeField] private int maxExtraRounds = 10;
-    [SerializeField] private int[] blockDestroyRounds = new int[4];
+    [SerializeField] private int _maxRounds = 30;
+    [SerializeField] private int _maxExtraRounds = 10;
+    [SerializeField] private int _scoreToWin = 5;
+    [SerializeField] private int[] _blockDestroyRounds = new int[4];
 
-    private NetworkVariable<float> timerFillAmount = new(0f);
-    private NetworkVariable<int> roundNum = new(0);
-    private NetworkVariable<RPS> p1RevealedChoice = new(RPS.None);
-    private NetworkVariable<RPS> p2RevealedChoice = new(RPS.None);
-    private NetworkVariable<GameState> gameState = new(GameState.WaitingForPlayers);
-    private int p1Score = 0;
-    private int p2Score = 0;
+    [HideInInspector] public NetworkVariable<float> TimerFillAmount = new(0f);
+    [HideInInspector] public NetworkVariable<int> RoundNum = new(0);
+    [HideInInspector] public NetworkVariable<RPS> P1RevealedChoice = new(RPS.None);
+    [HideInInspector] public NetworkVariable<RPS> P2RevealedChoice = new(RPS.None);
+    [HideInInspector] public NetworkVariable<GameState> State = new(GameState.WaitingForPlayers);
+    [HideInInspector] public NetworkVariable<bool> IsDestroyPhase = new(false);
 
-    private int currentRound = 0;
-    private int currentDestroyPhase = 0;
+    [HideInInspector] public NetworkVariable<ulong> P1ClientId = new NetworkVariable<ulong>(ulong.MaxValue);
+    [HideInInspector] public NetworkVariable<ulong> P2ClientId = new NetworkVariable<ulong>(ulong.MaxValue);
+    [HideInInspector] public NetworkVariable<int> P1SubmitCount = new(0);
+    [HideInInspector] public NetworkVariable<int> P2SubmitCount = new(0);
+
+    [HideInInspector] public int GameScore => _p1Score - _p2Score;
+
+    private int _p1Score = 0;
+    private int _p2Score = 0;
+    private RPS _p1Choice = RPS.None;
+    private RPS _p2Choice = RPS.None;
+
+    private int _currentDestroyPhase = 0;
     private enum RoundResult { Draw, Player1Win, Player2Win }
 
-    private ulong p1ClientId;
-    private ulong p2ClientId;
 
     public override void OnNetworkSpawn()
     {
         if (IsServer)
         {
-            p1ClientId = NetworkManager.LocalClientId;
+            P1ClientId.Value = NetworkManager.LocalClientId;
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
         }
     }
@@ -64,18 +61,19 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
     {
         if (NetworkManager.Singleton.ConnectedClients.Count == 2)
         {
-            p2ClientId = clientId;
+            P2ClientId.Value = clientId;
             StartCoroutine(PlayRounds());
         }
     }
 
     private IEnumerator PlayRounds()
     {
-        yield return new WaitForSeconds(startDelay);
+        State.Value = GameState.Ready;
+        yield return new WaitForSeconds(_startDelay);
 
-        while (currentRound < maxRounds + maxExtraRounds)
+        while (RoundNum.Value < _maxRounds + _maxExtraRounds)
         {
-            currentRound++;
+            RoundNum.Value++;
 
             // 1. 라운드 준비: 라운드 시간, UI 설정, 블록 파괴 준비
             yield return StartCoroutine(SetupRoundRoutine());
@@ -89,87 +87,63 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
             // 4. 1차 게임 오버 체크
             if (CheckGameOver())
             {
-                HideChoiceImages();
                 yield break;
             }
 
-            // 5. 블록 파괴 후 2차 게임 오버 체크
-            if (HandleBlockDestruction())
-            {
-                HideChoiceImages();
-                yield break;
-            }
-
-            yield return new WaitForSeconds(moveToNextRoundDelay);
-            HideChoiceImages();
+            yield return new WaitForSeconds(_moveToNextRoundDelay);
         }
-
-        UpdateRoundTextClientRpc("Draw!");
     }
 
     private IEnumerator SetupRoundRoutine()
     {
-        timerFillAmount.Value = 0f;
+        _p1Choice = RPS.None;
+        _p2Choice = RPS.None;
 
-        //FIXME
-        player1.ResetChoice();
-        player2.ResetChoice();
-
-        if (currentRound == maxRounds + 1)
+        if (RoundNum.Value == _maxRounds + 1)
         {
-            UpdateRoundTextClientRpc("Ready for Extra Round...");
-            roundDuration = extraRoundDuration;
-            yield return new WaitForSeconds(extraRoundStartDelay);
-            UpdateRoundTextClientRpc("Extra Round!");
+            _roundDuration = _extraRoundDuration;
+            State.Value = GameState.ReadyForExtraRound;
+            yield return new WaitForSeconds(_extraRoundStartDelay);
         }
-        else if (currentRound > maxRounds)
+        else if (RoundNum.Value > _maxRounds)
         {
-            roundDuration *= extraRoundDurationDecrement;
-        }
-        else
-        {
-            UpdateRoundTextClientRpc($"Round {currentRound}");
+            _roundDuration *= _extraRoundDurationDecrement;
         }
 
-        if (ShouldDestroyBlock())
-        {
-            BlinkBlockClientRpc();
-        }
+        IsDestroyPhase.Value = ShouldDestroyBlock();
     }
 
     private IEnumerator TimerRoutine()
     {
-        SetInputAvailableClientRpc(true);
+        State.Value = GameState.Playing;
+        TimerFillAmount.Value = 0f;
 
         float passedTime = 0f;
-        while (passedTime < roundDuration)
+        while (passedTime < _roundDuration)
         {
             passedTime += Time.deltaTime;
 
-            timerFillAmount.Value = passedTime / roundDuration;
+            TimerFillAmount.Value = passedTime / _roundDuration;
 
             yield return null;
         }
-        timerFillAmount.Value = 1f;
-
-        SetInputAvailableClientRpc(false);
+        TimerFillAmount.Value = 1f;
     }
 
     private IEnumerator EvaluateRoutine()
     {
         RoundResult winner = FindWinner();
 
-        yield return new WaitForSeconds(revealToMoveDelay);
+        State.Value = GameState.Result;
+        yield return new WaitForSeconds(_revealToMoveDelay);
 
         if (winner == RoundResult.Player1Win)
         {
-            player1.Move(1);
-            player2.Move(1);
+            _p1Score++;
         }
         else if (winner == RoundResult.Player2Win)
         {
-            player1.Move(-1);
-            player2.Move(-1);
+            _p2Score++;
         }
 
         CameraController.Instance.MoveCamera();
@@ -177,108 +151,66 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
 
     private bool ShouldDestroyBlock()
     {
-        return currentDestroyPhase < blockDestroyRounds.Length && currentRound == blockDestroyRounds[currentDestroyPhase];
-    }
-
-    private bool HandleBlockDestruction()
-    {
-        if (ShouldDestroyBlock())
+        bool shouldDestroyBlock = _currentDestroyPhase < _blockDestroyRounds.Length && RoundNum.Value == _blockDestroyRounds[_currentDestroyPhase];
+        if (shouldDestroyBlock)
         {
-            Bridge.Instance.DestroyBlock();
-            currentDestroyPhase++;
-
-            return CheckGameOver();
+            _currentDestroyPhase++;
+            _scoreToWin--;
         }
-        return false;
-    }
-
-    private void HideChoiceImages()
-    {
-        player1ChoiceImage.gameObject.SetActive(false);
-        player2ChoiceImage.gameObject.SetActive(false);
+        return shouldDestroyBlock;
     }
 
     private RoundResult FindWinner()
     {
-        RPS p1Choice = player1.GetChoice();
-        RPS p2Choice = player2.GetChoice();
+        P1RevealedChoice.Value = _p1Choice;
+        P2RevealedChoice.Value = _p2Choice;
 
-        if (p1Choice != RPS.None)
+        if (_p1Choice == _p2Choice)
         {
-            player1ChoiceImage.sprite = GetChoiceSprite(p1Choice);
-            player1ChoiceImage.gameObject.SetActive(true);
-        }
-        if (p2Choice != RPS.None)
-        {
-            player2ChoiceImage.sprite = GetChoiceSprite(p2Choice);
-            player2ChoiceImage.gameObject.SetActive(true);
-        }
-
-        if (p1Choice == p2Choice)
-        {
-            Debug.Log($"It's a tie! Both players chose {p1Choice}");
+            Debug.Log($"It's a tie! Both players chose {_p1Choice}");
             return RoundResult.Draw;
         }
-        else if ((p1Choice == RPS.Rock && p2Choice == RPS.Scissors) ||
-                 (p1Choice == RPS.Paper && p2Choice == RPS.Rock) ||
-                 (p1Choice == RPS.Scissors && p2Choice == RPS.Paper) ||
-                 (p1Choice != RPS.None && p2Choice == RPS.None))
+        else if ((_p1Choice == RPS.Rock && _p2Choice == RPS.Scissors) ||
+                 (_p1Choice == RPS.Paper && _p2Choice == RPS.Rock) ||
+                 (_p1Choice == RPS.Scissors && _p2Choice == RPS.Paper) ||
+                 (_p1Choice != RPS.None && _p2Choice == RPS.None))
         {
-            Debug.Log($"Player 1 wins the round! ({p1Choice} beats {p2Choice})");
+            Debug.Log($"Player 1 wins the round! ({_p1Choice} beats {_p2Choice})");
             return RoundResult.Player1Win;
         }
         else
         {
-            Debug.Log($"Player 2 wins the round! ({p2Choice} beats {p1Choice})");
+            Debug.Log($"Player 2 wins the round! ({_p2Choice} beats {_p1Choice})");
             return RoundResult.Player2Win;
         }
     }
 
     private bool CheckGameOver()
     {
-        if (player1.HasLost())
+        return GameScore >= _scoreToWin || GameScore <= -_scoreToWin;
+    }
+
+    public bool IsExtraRound()
+    {
+        return RoundNum.Value > _maxRounds;
+    }
+
+    public void SetPlayerChoice(ulong clientId, RPS choice)
+    {
+        if (State.Value != GameState.Playing)
         {
-            Debug.Log("Player 2 Wins!");
-            UpdateRoundTextClientRpc("Player 2 Wins!");
-            return true;
+            return;
         }
-        else if (player2.HasLost())
+
+        if (clientId == P1ClientId.Value)
         {
-            Debug.Log("Player 1 Wins!");
-            UpdateRoundTextClientRpc("Player 1 Wins!");
-            return true;
+            _p1Choice = choice;
+            P1SubmitCount.Value++;
         }
-        return false;
-    }
-
-    private Sprite GetChoiceSprite(RPS choice)
-    {
-        return choice switch
+        else if (clientId == P2ClientId.Value)
         {
-            RPS.Rock => rockSprite,
-            RPS.Paper => paperSprite,
-            RPS.Scissors => scissorsSprite,
-            _ => null,
-        };
-    }
-
-    //========================= Client RPCs ========================
-
-    [ClientRpc]
-    private void UpdateRoundTextClientRpc(string text)
-    {
-        roundText.text = text;
-    }
-
-    [ClientRpc]
-    private void SetInputAvailableClientRpc(bool available)
-    {
-        NetworkInputManager.Instance.SetInputAvailable(available);
-    }
-
-    [ClientRpc]
-    private void BlinkBlockClientRpc()
-    {
-        Bridge.Instance.BeforeDestroyBlock();
+            _p2Choice = choice;
+            P2SubmitCount.Value++;
+        }
     }
 }

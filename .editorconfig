@@ -15,63 +15,115 @@ newline = lf
 # Wrap lines that exceed 80 characters
 max_line_length = 80
 
-# Naming rules
-dotnet_naming_rule.camel_case_variables.severity = error
-dotnet_naming_rule.camel_case_variables.symbols = variable
-dotnet_naming_rule.camel_case_variables.style = camel_case
-
-dotnet_naming_symbols.variable.applicable_kinds = field, local, parameter
-dotnet_naming_symbols.variable.applicable_accessibilities = *
-dotnet_naming_symbols.variable.required_modifiers = 
-
+# Naming Styles
 dotnet_naming_style.camel_case.capitalization = camel_case
-
-dotnet_naming_rule.pascal_case_methods.severity = error
-dotnet_naming_rule.pascal_case_methods.symbols = method
-dotnet_naming_rule.pascal_case_methods.style = pascal_case
-
-dotnet_naming_symbols.method.applicable_kinds = method, event
-dotnet_naming_symbols.method.applicable_accessibilities = *
-dotnet_naming_symbols.method.required_modifiers = 
-
 dotnet_naming_style.pascal_case.capitalization = pascal_case
 
-# Naming rules added (#sejin)
-dotnet_naming_rule.camel_case_fields.severity = error
-dotnet_naming_rule.camel_case_fields.symbols = field
-dotnet_naming_rule.camel_case_fields.style = camel_case
-
-dotnet_naming_symbols.field.applicable_kinds = field
-dotnet_naming_symbols.field.applicable_accessibilities = private, internal, protected_internal
-dotnet_naming_symbols.field.required_modifiers = 
-
-dotnet_naming_rule.pascal_case_public_const_fields.severity = error
-dotnet_naming_rule.pascal_case_public_const_fields.symbols = public_const_field
-dotnet_naming_rule.pascal_case_public_const_fields.style = pascal_case
-
-dotnet_naming_symbols.public_const_field.applicable_kinds = field
-dotnet_naming_symbols.public_const_field.applicable_accessibilities = private, protected, public
-dotnet_naming_symbols.public_const_field.required_modifiers = const
-
-dotnet_naming_rule.pascal_case_static_readonly_fields.severity = error
-dotnet_naming_rule.pascal_case_static_readonly_fields.symbols = static_readonly_field
-dotnet_naming_rule.pascal_case_static_readonly_fields.style = pascal_case
-
-dotnet_naming_symbols.static_readonly_field.applicable_kinds = field
-dotnet_naming_symbols.static_readonly_field.applicable_accessibilities = public
-dotnet_naming_symbols.static_readonly_field.required_modifiers = static, readonly
-
-# private static 필드는 '_'로 시작해야 한다.
-dotnet_naming_rule.static_field_with_underscore.severity = error
-dotnet_naming_rule.static_field_with_underscore.symbols = static_field
-dotnet_naming_rule.static_field_with_underscore.style = underscore_prefix
-
-dotnet_naming_symbols.static_field.applicable_kinds = field
-dotnet_naming_symbols.static_field.applicable_accessibilities = private, internal, protected_internal
-dotnet_naming_symbols.static_field.required_modifiers = static
+dotnet_naming_style.interface_style.capitalization = pascal_case
+dotnet_naming_style.interface_style.required_prefix = I
 
 dotnet_naming_style.underscore_prefix.capitalization = camel_case
 dotnet_naming_style.underscore_prefix.required_prefix = _
+
+# Naming Symbols
+dotnet_naming_symbols.classes_and_enums.applicable_kinds = class, struct, enum, delegate
+dotnet_naming_symbols.classes_and_enums.applicable_accessibilities = *
+
+dotnet_naming_symbols.interfaces.applicable_kinds = interface
+dotnet_naming_symbols.interfaces.applicable_accessibilities = *
+
+dotnet_naming_symbols.methods.applicable_kinds = method
+dotnet_naming_symbols.methods.applicable_accessibilities = *
+
+dotnet_naming_symbols.public_properties_and_fields.applicable_kinds = property, field
+dotnet_naming_symbols.public_properties_and_fields.applicable_accessibilities = public, internal
+
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private, protected
+
+dotnet_naming_symbols.locals_and_parameters.applicable_kinds = parameter, local
+dotnet_naming_symbols.locals_and_parameters.applicable_accessibilities = *
+
+# Naming rules
+dotnet_interfaces_rule.symbols = interfaces
+dotnet_interfaces_rule.style = interface_style
+dotnet_interfaces_rule.severity = warning
+
+dotnet_naming_rule.classes_rule.symbols = classes_and_enums
+dotnet_naming_rule.classes_rule.style = pascal_case
+dotnet_naming_rule.classes_rule.severity = warning
+
+dotnet_naming_rule.methods_rule.symbols = methods
+dotnet_naming_rule.methods_rule.style = pascal_case
+dotnet_naming_rule.methods_rule.severity = warning
+
+dotnet_naming_rule.public_members_rule.symbols = public_properties_and_fields
+dotnet_naming_rule.public_members_rule.style = pascal_case
+dotnet_naming_rule.public_members_rule.severity = warning
+
+dotnet_naming_rule.private_fields_rule.symbols = private_fields
+dotnet_naming_rule.private_fields_rule.style = underscore_prefix
+dotnet_naming_rule.private_fields_rule.severity = warning
+
+dotnet_naming_rule.locals_rule.symbols = locals_and_parameters
+dotnet_naming_rule.locals_rule.style = camel_case
+dotnet_naming_rule.locals_rule.severity = warning
+
+# dotnet_naming_rule.camel_case_variables.severity = error
+# dotnet_naming_rule.camel_case_variables.symbols = variable
+# dotnet_naming_rule.camel_case_variables.style = camel_case
+
+# dotnet_naming_symbols.variable.applicable_kinds = field, local, parameter
+# dotnet_naming_symbols.variable.applicable_accessibilities = *
+# dotnet_naming_symbols.variable.required_modifiers = 
+
+# dotnet_naming_rule.pascal_case_methods.severity = error
+# dotnet_naming_rule.pascal_case_methods.symbols = method
+# dotnet_naming_rule.pascal_case_methods.style = pascal_case
+
+# dotnet_naming_symbols.method.applicable_kinds = method, event
+# dotnet_naming_symbols.method.applicable_accessibilities = *
+# dotnet_naming_symbols.method.required_modifiers = 
+
+# dotnet_naming_rule.camel_case_fields.severity = error
+# dotnet_naming_rule.camel_case_fields.symbols = field
+# dotnet_naming_rule.camel_case_fields.style = camel_case
+
+# dotnet_naming_symbols.field.applicable_kinds = field
+# dotnet_naming_symbols.field.applicable_accessibilities = private, internal, protected_internal
+# dotnet_naming_symbols.field.required_modifiers = 
+
+# dotnet_naming_rule.pascal_case_public_const_fields.severity = error
+# dotnet_naming_rule.pascal_case_public_const_fields.symbols = public_const_field
+# dotnet_naming_rule.pascal_case_public_const_fields.style = pascal_case
+
+# dotnet_naming_symbols.public_const_field.applicable_kinds = field
+# dotnet_naming_symbols.public_const_field.applicable_accessibilities = private, protected, public
+# dotnet_naming_symbols.public_const_field.required_modifiers = const
+
+# dotnet_naming_rule.pascal_case_static_readonly_fields.severity = error
+# dotnet_naming_rule.pascal_case_static_readonly_fields.symbols = static_readonly_field
+# dotnet_naming_rule.pascal_case_static_readonly_fields.style = pascal_case
+
+# dotnet_naming_symbols.static_readonly_field.applicable_kinds = field
+# dotnet_naming_symbols.static_readonly_field.applicable_accessibilities = public
+# dotnet_naming_symbols.static_readonly_field.required_modifiers = static, readonly
+
+# dotnet_naming_rule.interfaces_rule.symbols = interfaces
+# dotnet_naming_rule.interfaces_rule.style = interface_style
+# dotnet_naming_rule.interfaces_rule.severity = warning
+
+# # private static 필드는 '_'로 시작해야 한다.
+# dotnet_naming_rule.static_field_with_underscore.severity = error
+# dotnet_naming_rule.static_field_with_underscore.symbols = static_field
+# dotnet_naming_rule.static_field_with_underscore.style = underscore_prefix
+
+# dotnet_naming_symbols.static_field.applicable_kinds = field
+# dotnet_naming_symbols.static_field.applicable_accessibilities = private, internal, protected_internal
+# dotnet_naming_symbols.static_field.required_modifiers = static
+
+# dotnet_naming_style.underscore_prefix.capitalization = camel_case
+# dotnet_naming_style.underscore_prefix.required_prefix = _
 
 # Force explicit access modifiers on all members
 dotnet_style_require_accessibility_modifiers = always:error

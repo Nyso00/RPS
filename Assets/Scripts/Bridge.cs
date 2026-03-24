@@ -11,7 +11,7 @@ public class Bridge : Singleton<Bridge>
     public GameObject blockPrefab;
 
     [Tooltip("다리의 한쪽 방향에 있을 블록 개수\n(= 게임 승리에 필요한 승점)")]
-    public int blockCountOfOneSide = 5;
+    public int BlockCountOfOneSide = 5;
     public float blockSpacing = 2.0f;
     [SerializeField] private float blinkSpeed = 2.0f;
 
@@ -26,6 +26,12 @@ public class Bridge : Singleton<Bridge>
             return 0f;
 
         return blocks[index].transform.position.x;
+    }
+
+    public float GetBlockX(int score, bool leftSide)
+    {
+        int index = BlockCountOfOneSide + (leftSide ? 0 : 1) + score;
+        return GetBlockX(index);
     }
 
     public void BeforeDestroyBlock()
@@ -121,7 +127,7 @@ public class BridgeEditor : Editor
             }
         }
 
-        int blockCount = bridge.blockCountOfOneSide * 2 + 2; // 양쪽 블록 개수 + 보이지 않는 양 끝 블록
+        int blockCount = bridge.BlockCountOfOneSide * 2 + 2; // 양쪽 블록 개수 + 보이지 않는 양 끝 블록
 
         bridge.blocks = new GameObject[blockCount];
 

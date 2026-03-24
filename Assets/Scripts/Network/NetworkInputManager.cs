@@ -1,36 +1,53 @@
+using System;
 using Unity.VisualScripting;
 using UnityEngine;
 
 public class NetworkInputManager : Singleton<NetworkInputManager>
 {
-    [SerializeField] private GameObject playerButtonUI;
-    private GameControls controls;
+    private GameControls _controls;
+    private PlayerInputSender _mySender;
 
     protected override void Awake()
     {
         base.Awake();
 
-        controls = new GameControls();
-        controls.Player1.Rock.performed += ctx => NetworkGameManager.Instance.player1.SetChoice(RPS.Rock);
-        controls.Player1.Paper.performed += ctx => NetworkGameManager.Instance.player1.SetChoice(RPS.Paper);
-        controls.Player1.Scissors.performed += ctx => NetworkGameManager.Instance.player1.SetChoice(RPS.Scissors);
+        _controls = new GameControls();
+        _controls.Player1.Rock.performed += ctx => TrySend(RPS.Rock);
+        _controls.Player1.Paper.performed += ctx => TrySend(RPS.Paper);
+        _controls.Player1.Scissors.performed += ctx => TrySend(RPS.Scissors);
     }
 
-    public void SetInputAvailable(bool available)
+    private void Start()
     {
-        if (available)
+        NetworkGameManager.Instance.State.OnValueChanged += (oldState, newState) =>
         {
-            controls.Enable();
-        }
-        else
+            if (newState == GameState.Playing)
+            {
+                _controls.Enable();
+            }
+            else
+            {
+                _controls.Disable();
+            }
+        };
+    }
+
+    public void SetSender(PlayerInputSender sender)
+    {
+        _mySender = sender;
+    }
+
+    private void TrySend(RPS choice)
+    {
+        if (NetworkGameManager.Instance.State.Value != GameState.Playing)
         {
-            controls.Disable();
+            return;
         }
-        playerButtonUI.SetActive(available);
+        _mySender.SendChoiceToServer(choice);
     }
 
     private void OnDestroy()
     {
-        controls?.Dispose();
+        _controls?.Dispose();
     }
 }

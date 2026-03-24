@@ -16,11 +16,11 @@ public class PlayerController : MonoBehaviour
     {
         if (playerNum == PlayerNum.Player1)
         {
-            curPosition = Bridge.Instance.blockCountOfOneSide;
+            curPosition = Bridge.Instance.BlockCountOfOneSide;
         }
         else // if (playerNum == PlayerNum.Player2)
         {
-            curPosition = Bridge.Instance.blockCountOfOneSide + 1;
+            curPosition = Bridge.Instance.BlockCountOfOneSide + 1;
         }
         SetPosition(curPosition);
         checkMarkImage.fillAmount = 0f;
