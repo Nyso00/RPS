@@ -97,6 +97,8 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
 
             yield return new WaitForSeconds(_moveToNextRoundDelay);
         }
+
+        State.Value = GameState.GameOver;
     }
 
     private IEnumerator SetupRoundRoutine()

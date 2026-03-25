@@ -7,6 +7,7 @@ using Unity.Netcode;
 public class VisualManager : MonoBehaviour
 {
     [Header("UI 요소")]
+    [SerializeField] private GameObject _joinCodeDisplayText; // 방장이 참가 코드를 보여줄 텍스트
     [SerializeField] private TextMeshProUGUI _roundText;
     [SerializeField] private Image _timerGauge;
     [SerializeField] private Image _myChoiceImage;
@@ -77,10 +78,12 @@ public class VisualManager : MonoBehaviour
         switch (newState)
         {
             case GameState.WaitingForPlayers:
+                _joinCodeDisplayText.SetActive(true);
                 _roundText.text = "Waiting for Players...";
                 break;
 
             case GameState.Ready:
+                _joinCodeDisplayText.SetActive(false);
                 _roundText.text = "Ready...";
                 break;
 
