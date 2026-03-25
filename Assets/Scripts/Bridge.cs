@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.Rendering;
 using System.Collections;
 
 #if UNITY_EDITOR
@@ -8,24 +7,24 @@ using UnityEditor;
 
 public class Bridge : Singleton<Bridge>
 {
-    public GameObject blockPrefab;
+    public GameObject BlockPrefab;
 
     [Tooltip("다리의 한쪽 방향에 있을 블록 개수\n(= 게임 승리에 필요한 승점)")]
     public int BlockCountOfOneSide = 5;
-    public float blockSpacing = 2.0f;
-    [SerializeField] private float blinkSpeed = 2.0f;
+    public float BlockSpacing = 2.0f;
+    [SerializeField] private float _blinkSpeed = 2.0f;
 
-    [HideInInspector] public GameObject[] blocks;
+    [HideInInspector] public GameObject[] Blocks;
 
-    private int destroyedIdx = 0;
-    private Coroutine blinkCoroutine;
+    private int _destroyedIdx = 0;
+    private Coroutine _blinkCoroutine;
 
     public float GetBlockX(int index)
     {
-        if (blocks == null || index < 0 || index >= blocks.Length)
+        if (Blocks == null || index < 0 || index >= Blocks.Length)
             return 0f;
 
-        return blocks[index].transform.position.x;
+        return Blocks[index].transform.position.x;
     }
 
     public float GetBlockX(int score, bool leftSide)
@@ -36,20 +35,20 @@ public class Bridge : Singleton<Bridge>
 
     public void BeforeDestroyBlock()
     {
-        blinkCoroutine = StartCoroutine(BlinkBlock());
+        _blinkCoroutine = StartCoroutine(BlinkBlock());
     }
 
     private IEnumerator BlinkBlock()
     {
         float elapsedTime = 0f;
-        Renderer leftBlockRenderer = blocks[destroyedIdx + 1].GetComponent<Renderer>();
-        Renderer rightBlockRenderer = blocks[blocks.Length - destroyedIdx - 2].GetComponent<Renderer>();
+        Renderer leftBlockRenderer = Blocks[_destroyedIdx + 1].GetComponent<Renderer>();
+        Renderer rightBlockRenderer = Blocks[Blocks.Length - _destroyedIdx - 2].GetComponent<Renderer>();
 
         Color blockColor = leftBlockRenderer.material.color;
 
         while (true)
         {
-            float alpha = Mathf.PingPong(elapsedTime * blinkSpeed + 1f, 1f);
+            float alpha = Mathf.PingPong(elapsedTime * _blinkSpeed + 1f, 1f);
             blockColor.a = alpha;
 
             leftBlockRenderer.material.color = blockColor;
@@ -62,25 +61,25 @@ public class Bridge : Singleton<Bridge>
 
     public void DestroyBlock()
     {
-        if (blinkCoroutine != null)
+        if (_blinkCoroutine != null)
         {
-            StopCoroutine(blinkCoroutine);
+            StopCoroutine(_blinkCoroutine);
         }
-        destroyedIdx++;
-        blocks[destroyedIdx].SetActive(false);
-        blocks[blocks.Length - destroyedIdx - 1].SetActive(false);
+        _destroyedIdx++;
+        Blocks[_destroyedIdx].SetActive(false);
+        Blocks[Blocks.Length - _destroyedIdx - 1].SetActive(false);
     }
 
     public bool IsOutOfRange(int pos)
     {
-        return pos <= destroyedIdx || pos >= blocks.Length - 1 - destroyedIdx;
+        return pos <= _destroyedIdx || pos >= Blocks.Length - 1 - _destroyedIdx;
     }
 }
 
 
 /*
     Bridge의 블록을 Editor에서 자동으로 배치하는 스크립트입니다.
-    Bridge 오브젝트에 있는 blocks 배열에 블록들을 할당하고 block spacing을 설정하면, "Arrange Blocks" 버튼을 누르면 블록들이 균등하게 배치됩니다.
+    Bridge 오브젝트에 있는 Blocks 배열에 블록들을 할당하고 block spacing을 설정하면, "Arrange Blocks" 버튼을 누르면 블록들이 균등하게 배치됩니다.
 */
 #if UNITY_EDITOR
 [CustomEditor(typeof(Bridge))]
@@ -88,7 +87,7 @@ public class BridgeEditor : Editor
 {
     public override void OnInspectorGUI()
     {
-        // 1. 기본 인스펙터 변수들(blockPrefab, blockCount 등) 표시
+        // 1. 기본 인스펙터 변수들(BlockPrefab, blockCount 등) 표시
         DrawDefaultInspector();
 
         Bridge bridge = (Bridge) target;
@@ -110,30 +109,30 @@ public class BridgeEditor : Editor
 
     private void GenerateBlocks(Bridge bridge)
     {
-        if (bridge.blockPrefab == null)
+        if (bridge.BlockPrefab == null)
         {
             Debug.LogWarning("Block Prefab이 할당되지 않았습니다! 인스펙터에서 프리팹을 넣어주세요.");
             return;
         }
 
-        if (bridge.blocks != null)
+        if (bridge.Blocks != null)
         {
-            for (int i = 0; i < bridge.blocks.Length; i++)
+            for (int i = 0; i < bridge.Blocks.Length; i++)
             {
-                if (bridge.blocks[i] != null)
+                if (bridge.Blocks[i] != null)
                 {
-                    Undo.DestroyObjectImmediate(bridge.blocks[i]);
+                    Undo.DestroyObjectImmediate(bridge.Blocks[i]);
                 }
             }
         }
 
         int blockCount = bridge.BlockCountOfOneSide * 2 + 2; // 양쪽 블록 개수 + 보이지 않는 양 끝 블록
 
-        bridge.blocks = new GameObject[blockCount];
+        bridge.Blocks = new GameObject[blockCount];
 
         for (int i = 0; i < blockCount; i++)
         {
-            GameObject newBlock = (GameObject) PrefabUtility.InstantiatePrefab(bridge.blockPrefab);
+            GameObject newBlock = (GameObject) PrefabUtility.InstantiatePrefab(bridge.BlockPrefab);
 
             // Undo 등록 (Ctrl + Z 로 생성 취소 가능하게 만듦)
             Undo.RegisterCreatedObjectUndo(newBlock, "Generate Bridge Blocks");
@@ -141,7 +140,7 @@ public class BridgeEditor : Editor
             newBlock.transform.SetParent(bridge.transform);
             newBlock.name = $"Block_{i}";
 
-            bridge.blocks[i] = newBlock;
+            bridge.Blocks[i] = newBlock;
         }
 
         ArrangeBlocks(bridge);
@@ -152,26 +151,26 @@ public class BridgeEditor : Editor
 
     private void ArrangeBlocks(Bridge bridge)
     {
-        if (bridge == null || bridge.blocks == null || bridge.blocks.Length == 0)
+        if (bridge == null || bridge.Blocks == null || bridge.Blocks.Length == 0)
         {
             return;
         }
 
-        float firstBlockX = bridge.transform.position.x - (bridge.blocks.Length - 1) * bridge.blockSpacing / 2;
+        float firstBlockX = bridge.transform.position.x - (bridge.Blocks.Length - 1) * bridge.BlockSpacing / 2;
 
-        for (int i = 0; i < bridge.blocks.Length; i++)
+        for (int i = 0; i < bridge.Blocks.Length; i++)
         {
-            GameObject block = bridge.blocks[i];
+            GameObject block = bridge.Blocks[i];
             if (block != null)
             {
                 // 위치 변경 전 Undo 기록 (Ctrl+Z 지원)
                 Undo.RecordObject(block.transform, "Arrange Bridge Blocks");
-                block.transform.position = bridge.transform.position + new Vector3(firstBlockX + i * bridge.blockSpacing, 0, 0);
+                block.transform.position = bridge.transform.position + new Vector3(firstBlockX + i * bridge.BlockSpacing, 0, 0);
             }
         }
 
-        bridge.blocks[0].SetActive(false);
-        bridge.blocks[bridge.blocks.Length - 1].SetActive(false);
+        bridge.Blocks[0].SetActive(false);
+        bridge.Blocks[bridge.Blocks.Length - 1].SetActive(false);
     }
 }
 #endif

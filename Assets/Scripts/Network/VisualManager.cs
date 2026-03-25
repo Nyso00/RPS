@@ -78,6 +78,7 @@ public class VisualManager : MonoBehaviour
         switch (newState)
         {
             case GameState.WaitingForPlayers:
+                _joinCodeDisplayText.GetComponent<TextMeshProUGUI>().text = $"Join Code\n{MainUI.JoinCode}";
                 _joinCodeDisplayText.SetActive(true);
                 _roundText.text = "Waiting for Players...";
                 break;

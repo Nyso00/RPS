@@ -1,7 +1,3 @@
-using System;
-using Unity.VisualScripting;
-using UnityEngine;
-
 public class NetworkInputManager : Singleton<NetworkInputManager>
 {
     private GameControls _controls;
