@@ -36,6 +36,9 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
     [HideInInspector] public NetworkVariable<int> P1Score = new(0);
     [HideInInspector] public NetworkVariable<int> P2Score = new(0);
     [HideInInspector] public int GameScore => P1Score.Value - P2Score.Value;
+
+    [HideInInspector] public NetworkVariable<bool> P1WantsRestart = new(false);
+    [HideInInspector] public NetworkVariable<bool> P2WantsRestart = new(false);
     //-----------------------------------------------------------------------------------------
 
     private int _scoreToWin;
@@ -52,6 +55,7 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
         {
             P1ClientId.Value = NetworkManager.LocalClientId;
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected_Server;
             _scoreToWin = Bridge.Instance.BlockCountOfOneSide;
         }
     }
@@ -218,5 +222,52 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
             _p2Choice = choice;
             P2SubmitCount.Value++;
         }
+    }
+
+    public void RequestRestartFromClient(ulong clientId)
+    {
+        if (clientId == P1ClientId.Value)
+        {
+             P1WantsRestart.Value = true;
+        }
+        else if (clientId == P2ClientId.Value)
+        {
+             P2WantsRestart.Value = true;
+        }
+
+        if (P1WantsRestart.Value && P2WantsRestart.Value)
+        {
+            NetworkManager.Singleton.SceneManager.LoadScene("OnlineScene", UnityEngine.SceneManagement.LoadSceneMode.Single);
+        }
+    }
+
+    private void OnClientDisconnected_Server(ulong clientId)
+    {
+        if (clientId == P2ClientId.Value)
+        {
+            // 게임 도중 나갔다면 즉시 중단 및 게임 오버!
+            if (State.Value != GameState.GameOver)
+            {
+                StopAllCoroutines();
+                State.Value = GameState.GameOver;
+            }
+        }
+    }
+
+    private void OnApplicationQuit()
+    {
+        // 네트워크가 켜져 있다면, 강제로 끄기 전에 이별 편지(Shutdown)를 날립니다!
+        if (NetworkManager.Singleton != null && 
+           (NetworkManager.Singleton.IsClient || NetworkManager.Singleton.IsServer))
+        {
+            NetworkManager.Singleton.Shutdown();
+        }
+    }
+
+    public override void OnDestroy()
+    {
+        NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+        NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected_Server;
+        base.OnDestroy();
     }
 }

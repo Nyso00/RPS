@@ -14,7 +14,7 @@ public class Bridge : Singleton<Bridge>
     public float BlockSpacing = 2.0f;
     [SerializeField] private float _blinkSpeed = 2.0f;
 
-    [HideInInspector] public GameObject[] Blocks;
+    public GameObject[] Blocks;
 
     private int _destroyedIdx = 0;
     private Coroutine _blinkCoroutine;

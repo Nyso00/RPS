@@ -37,22 +37,12 @@ public class MainUI : MonoBehaviour
         _modeSelectPanel.SetActive(true);
         _networkPanel.SetActive(false);
 
-        _localModeButton.onClick.AddListener(() => LoadScene(1));
+        _localModeButton.onClick.AddListener(() => SceneManager.LoadScene("LocalScene"));
         _onlineModeButton.onClick.AddListener(OnOnlineModeSelected);
         _backButton.onClick.AddListener(OnBackButtonClicked);
 
         _hostButton.onClick.AddListener(StartHostWithRelay);
         _clientButton.onClick.AddListener(() => StartClientWithRelay(_joinCodeInput.text));
-    }
-
-    private void LoadScene(string sceneName)
-    {
-        SceneManager.LoadScene(sceneName);
-    }
-
-    private void LoadScene(int sceneIndex)
-    {
-        SceneManager.LoadScene(sceneIndex);
     }
 
     private async void OnOnlineModeSelected()

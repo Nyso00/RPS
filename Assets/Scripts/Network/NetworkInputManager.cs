@@ -1,7 +1,8 @@
+using Unity.Netcode;
+
 public class NetworkInputManager : Singleton<NetworkInputManager>
 {
     private GameControls _controls;
-    private PlayerInputSender _mySender;
 
     protected override void Awake()
     {
@@ -28,22 +29,24 @@ public class NetworkInputManager : Singleton<NetworkInputManager>
         };
     }
 
-    public void SetSender(PlayerInputSender sender)
-    {
-        _mySender = sender;
-    }
+    // public void SetSender(PlayerInputSender sender)
+    // {
+    //     _mySender = sender;
+    // }
 
     private void TrySend(RPS choice)
     {
+        var mySender = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<PlayerInputSender>();
         if (NetworkGameManager.Instance.State.Value != GameState.Playing)
         {
             return;
         }
-        _mySender.SendChoiceToServer(choice);
+        mySender.SendChoiceToServer(choice);
     }
 
-    private void OnDestroy()
+    protected override void OnDestroy()
     {
         _controls?.Dispose();
+        base.OnDestroy();
     }
 }

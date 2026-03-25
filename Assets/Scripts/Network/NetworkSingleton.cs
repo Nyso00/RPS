@@ -29,4 +29,14 @@ public abstract class NetworkSingleton<T> : NetworkBehaviour where T : MonoBehav
             Destroy(gameObject);
         }
     }
+
+    public override void OnDestroy()
+    {
+        if (_instance == this)
+        {
+            _instance = null;
+        }
+
+        base.OnDestroy();
+    }
 }

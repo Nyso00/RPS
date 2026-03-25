@@ -1,3 +1,4 @@
+using Unity.Services.Matchmaker.Models;
 using UnityEngine;
 
 public class InputManager : Singleton<InputManager>
@@ -32,8 +33,9 @@ public class InputManager : Singleton<InputManager>
         playerButtonUI.SetActive(available);
     }
 
-    private void OnDestroy()
+    protected override void OnDestroy()
     {
         controls?.Dispose();
+        base.OnDestroy();
     }
 }
