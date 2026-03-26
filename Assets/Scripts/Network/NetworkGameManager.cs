@@ -57,6 +57,19 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
             NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected_Server;
             _scoreToWin = Bridge.Instance.BlockCountOfOneSide;
+
+            if (NetworkManager.Singleton.ConnectedClientsIds.Count >= 2)
+            {
+                // 나(호스트)를 제외한 나머지 손님의 ID를 찾아서 연결 처리 함수를 '강제로' 실행해 줍니다.
+                foreach (ulong connectedId in NetworkManager.Singleton.ConnectedClientsIds)
+                {
+                    if (connectedId != NetworkManager.LocalClientId)
+                    {
+                        OnClientConnected(connectedId); // 기존에 만들어두신 연결 함수 재활용!
+                        break; // 2인용 게임이므로 한 명 찾았으면 끝냅니다.
+                    }
+                }
+            }
         }
     }
 
@@ -228,11 +241,11 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
     {
         if (clientId == P1ClientId.Value)
         {
-             P1WantsRestart.Value = true;
+            P1WantsRestart.Value = true;
         }
         else if (clientId == P2ClientId.Value)
         {
-             P2WantsRestart.Value = true;
+            P2WantsRestart.Value = true;
         }
 
         if (P1WantsRestart.Value && P2WantsRestart.Value)
@@ -257,7 +270,7 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
     private void OnApplicationQuit()
     {
         // 네트워크가 켜져 있다면, 강제로 끄기 전에 이별 편지(Shutdown)를 날립니다!
-        if (NetworkManager.Singleton != null && 
+        if (NetworkManager.Singleton != null &&
            (NetworkManager.Singleton.IsClient || NetworkManager.Singleton.IsServer))
         {
             NetworkManager.Singleton.Shutdown();

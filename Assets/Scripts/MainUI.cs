@@ -86,7 +86,7 @@ public class MainUI : MonoBehaviour
         }
 
         // 3. 로그인이 완료되면 버튼을 활성화합니다.
-        _statusText.text = "Server connection complete! Create a room or enter a code.";
+        _statusText.text = "Successfully connected to server.";
         _hostButton.interactable = true;
         _clientButton.interactable = true;
     }
@@ -168,7 +168,7 @@ public class MainUI : MonoBehaviour
         catch (RelayServiceException e)
         {
             if (_cancelConnection) return;
-            _statusText.text = "Failed to connect to room. Please check the code.";
+            _statusText.text = "Please check your code and try again.";
             Debug.LogError($"Failed to connect to room: {e}");
             _hostButton.interactable = true;
             _clientButton.interactable = true;
