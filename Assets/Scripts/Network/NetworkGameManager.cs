@@ -39,9 +39,10 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
 
     [HideInInspector] public NetworkVariable<bool> P1WantsRestart = new(false);
     [HideInInspector] public NetworkVariable<bool> P2WantsRestart = new(false);
+
+    [HideInInspector] public NetworkVariable<int> ScoreToWin = new(0);
     //-----------------------------------------------------------------------------------------
 
-    private int _scoreToWin;
     private RPS _p1Choice = RPS.None;
     private RPS _p2Choice = RPS.None;
 
@@ -56,7 +57,7 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
             P1ClientId.Value = NetworkManager.LocalClientId;
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
             NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected_Server;
-            _scoreToWin = Bridge.Instance.BlockCountOfOneSide;
+            ScoreToWin.Value = Bridge.Instance.BlockCountOfOneSide;
 
             if (NetworkManager.Singleton.ConnectedClientsIds.Count >= 2)
             {
@@ -178,7 +179,7 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
         if (shouldDestroyBlock)
         {
             _currentDestroyPhase++;
-            _scoreToWin--;
+            ScoreToWin.Value--;
         }
         return shouldDestroyBlock;
     }
@@ -210,7 +211,7 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
 
     private bool CheckGameOver()
     {
-        return GameScore >= _scoreToWin || GameScore <= -_scoreToWin;
+        return GameScore >= ScoreToWin.Value || GameScore <= -ScoreToWin.Value;
     }
 
     public bool IsExtraRound()
@@ -279,8 +280,11 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
 
     public override void OnDestroy()
     {
-        NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
-        NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected_Server;
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected_Server;
+        }
         base.OnDestroy();
     }
 }

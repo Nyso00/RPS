@@ -4,6 +4,7 @@ using TMPro;
 using System.Collections;
 using Unity.Netcode;
 using UnityEngine.SceneManagement;
+using System;
 
 public class VisualManager : MonoBehaviour
 {
@@ -35,6 +36,12 @@ public class VisualManager : MonoBehaviour
     [SerializeField] private Button _playAgainButton;
     [SerializeField] private Button _mainMenuButton;
     [SerializeField] private TextMeshProUGUI _noticeText;
+
+    [Header("Pause 관련 UI")]
+    [SerializeField] private Button _pauseButton;
+    [SerializeField] private GameObject _pausePanel;
+    [SerializeField] private Button _resumeButton;
+    [SerializeField] private Button _pauseMainMenuButton;
 
     private NetworkGameManager gm;
     private bool IsPlayer1 => NetworkManager.Singleton.LocalClientId == gm.P1ClientId.Value;
@@ -76,6 +83,11 @@ public class VisualManager : MonoBehaviour
         _playAgainButton.onClick.AddListener(OnPlayAgainButtonClicked);
         _mainMenuButton.onClick.AddListener(OnMainMenuButtonClicked);
         _gameOverPanel.SetActive(false);
+
+        _pauseButton.onClick.AddListener(OnPauseButtonClicked);
+        _resumeButton.onClick.AddListener(OnResumeButtonClicked);
+        _pauseMainMenuButton.onClick.AddListener(OnMainMenuButtonClicked);
+        _pausePanel.SetActive(false);
 
         NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
     }
@@ -140,11 +152,11 @@ public class VisualManager : MonoBehaviour
                 _myCheckMarkImage.fillAmount = 0f;
                 _enemyCheckMarkImage.fillAmount = 0f;
 
-                if (gm.IsDestroyPhase.Value)
+                MovePlayers();
+                if (gm.IsDestroyPhase.Value && Math.Abs(CurrentScore) <= gm.ScoreToWin.Value)
                 {
                     Bridge.Instance.DestroyBlock();
                 }
-                MovePlayers();
                 break;
 
             case GameState.GameOver:
@@ -161,6 +173,9 @@ public class VisualManager : MonoBehaviour
                 {
                     _roundText.text = "DRAW!";
                 }
+
+                _pauseButton.interactable = false;
+                _pausePanel.SetActive(false);
                 _gameOverPanel.SetActive(true);
 
                 if (_opponentLeft && !NetworkManager.Singleton.IsServer)
@@ -329,14 +344,30 @@ public class VisualManager : MonoBehaviour
             // 게임 도중 터졌을 상황을 대비해 강제로 게임오버 패널 띄우기
             if (gm.State.Value != GameState.GameOver)
             {
+                _pauseButton.interactable = false;
                 _gameOverPanel.SetActive(true);
                 _roundText.text = "YOU WIN!";
             }
         }
     }
 
+    private void OnPauseButtonClicked()
+    {
+        _pausePanel.SetActive(true);
+        _pauseButton.interactable = false;
+    }
+
+    private void OnResumeButtonClicked()
+    {
+        _pausePanel.SetActive(false);
+        _pauseButton.interactable = true;
+    }
+
     private void OnDestroy()
     {
-        NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+        }
     }
 }

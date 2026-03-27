@@ -36,8 +36,19 @@ public class NetworkInputManager : Singleton<NetworkInputManager>
 
     private void TrySend(RPS choice)
     {
-        var mySender = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<PlayerInputSender>();
-        if (NetworkGameManager.Instance.State.Value != GameState.Playing)
+        if (NetworkGameManager.Instance == null || NetworkManager.Singleton == null || !NetworkManager.Singleton.IsConnectedClient)
+        {
+            return;
+        }
+
+        var playerObject = NetworkManager.Singleton.LocalClient?.PlayerObject;
+        if (playerObject == null)
+        {
+            return;
+        }
+
+        var mySender = playerObject.GetComponent<PlayerInputSender>();
+        if (mySender == null || NetworkGameManager.Instance.State.Value != GameState.Playing)
         {
             return;
         }
