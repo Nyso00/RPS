@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using Unity.Netcode;
+using System;
 
 public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
 {
@@ -21,26 +22,26 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
 
 
     //-------------------------------- Network Variables -------------------------------------
-    [HideInInspector] public NetworkVariable<float> TimerFillAmount = new(0f);
-    [HideInInspector] public NetworkVariable<int> RoundNum = new(0);
-    [HideInInspector] public NetworkVariable<RPS> P1RevealedChoice = new(RPS.None);
-    [HideInInspector] public NetworkVariable<RPS> P2RevealedChoice = new(RPS.None);
-    [HideInInspector] public NetworkVariable<GameState> State = new(GameState.WaitingForPlayers);
-    [HideInInspector] public NetworkVariable<bool> IsDestroyPhase = new(false);
+    [NonSerialized] public NetworkVariable<float> TimerFillAmount = new(0f);
+    [NonSerialized] public NetworkVariable<int> RoundNum = new(0);
+    [NonSerialized] public NetworkVariable<RPS> P1RevealedChoice = new(RPS.None);
+    [NonSerialized] public NetworkVariable<RPS> P2RevealedChoice = new(RPS.None);
+    [NonSerialized] public NetworkVariable<GameState> State = new(GameState.WaitingForPlayers);
+    [NonSerialized] public NetworkVariable<bool> IsDestroyPhase = new(false);
 
-    [HideInInspector] public NetworkVariable<ulong> P1ClientId = new(ulong.MaxValue);
-    [HideInInspector] public NetworkVariable<ulong> P2ClientId = new(ulong.MaxValue);
-    [HideInInspector] public NetworkVariable<int> P1SubmitCount = new(0);
-    [HideInInspector] public NetworkVariable<int> P2SubmitCount = new(0);
+    [NonSerialized] public NetworkVariable<ulong> P1ClientId = new(ulong.MaxValue);
+    [NonSerialized] public NetworkVariable<ulong> P2ClientId = new(ulong.MaxValue);
+    [NonSerialized] public NetworkVariable<int> P1SubmitCount = new(0);
+    [NonSerialized] public NetworkVariable<int> P2SubmitCount = new(0);
 
-    [HideInInspector] public NetworkVariable<int> P1Score = new(0);
-    [HideInInspector] public NetworkVariable<int> P2Score = new(0);
+    [NonSerialized] public NetworkVariable<int> P1Score = new(0);
+    [NonSerialized] public NetworkVariable<int> P2Score = new(0);
     [HideInInspector] public int GameScore => P1Score.Value - P2Score.Value;
 
-    [HideInInspector] public NetworkVariable<bool> P1WantsRestart = new(false);
-    [HideInInspector] public NetworkVariable<bool> P2WantsRestart = new(false);
+    [NonSerialized] public NetworkVariable<bool> P1WantsRestart = new(false);
+    [NonSerialized] public NetworkVariable<bool> P2WantsRestart = new(false);
 
-    [HideInInspector] public NetworkVariable<int> ScoreToWin = new(0);
+    [NonSerialized] public NetworkVariable<int> ScoreToWin = new(0);
     //-----------------------------------------------------------------------------------------
 
     private RPS _p1Choice = RPS.None;
@@ -259,7 +260,6 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
     {
         if (clientId == P2ClientId.Value)
         {
-            // 게임 도중 나갔다면 즉시 중단 및 게임 오버!
             if (State.Value != GameState.GameOver)
             {
                 StopAllCoroutines();
@@ -270,7 +270,6 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
 
     private void OnApplicationQuit()
     {
-        // 네트워크가 켜져 있다면, 강제로 끄기 전에 이별 편지(Shutdown)를 날립니다!
         if (NetworkManager.Singleton != null &&
            (NetworkManager.Singleton.IsClient || NetworkManager.Singleton.IsServer))
         {

@@ -51,7 +51,7 @@ public class MainUI : MonoBehaviour
         _modeSelectPanel.SetActive(false);
         _networkPanel.SetActive(true);
 
-        // 1. 서버에 로그인하기 전까지는 버튼을 못 누르게 막아둡니다.
+        // 1. 서버에 로그인하기 전까지는 버튼 비활성화
         _hostButton.interactable = false;
         _clientButton.interactable = false;
         _backButton.interactable = true;
@@ -85,7 +85,7 @@ public class MainUI : MonoBehaviour
             Debug.LogError($"Server connection failed: {e}");
         }
 
-        // 3. 로그인이 완료되면 버튼을 활성화합니다.
+        // 3. 로그인이 완료시 버튼 활성화
         _statusText.text = "Successfully connected to server.";
         _hostButton.interactable = true;
         _clientButton.interactable = true;

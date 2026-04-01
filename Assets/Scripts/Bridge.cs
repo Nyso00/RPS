@@ -22,7 +22,9 @@ public class Bridge : Singleton<Bridge>
     public float GetBlockX(int index)
     {
         if (Blocks == null || index < 0 || index >= Blocks.Length)
+        {
             return 0f;
+        }
 
         return Blocks[index].transform.position.x;
     }

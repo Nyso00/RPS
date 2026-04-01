@@ -5,6 +5,8 @@ using System.Collections;
 using Unity.Netcode;
 using UnityEngine.SceneManagement;
 using System;
+using Unity.Rendering;
+using UnityEngine.Rendering;
 
 public class VisualManager : MonoBehaviour
 {
@@ -42,6 +44,11 @@ public class VisualManager : MonoBehaviour
     [SerializeField] private GameObject _pausePanel;
     [SerializeField] private Button _resumeButton;
     [SerializeField] private Button _pauseMainMenuButton;
+
+    [Header("긴장감 연출")]
+    [SerializeField] private Volume _tensionVolume;
+    [SerializeField] private float _heartbeatSpeed = 5.0f;
+    private Coroutine _heartbeatCoroutine;
 
     private NetworkGameManager gm;
     private bool IsPlayer1 => NetworkManager.Singleton.LocalClientId == gm.P1ClientId.Value;
@@ -131,10 +138,16 @@ public class VisualManager : MonoBehaviour
                 {
                     Bridge.Instance.BeforeDestroyBlock();
                 }
+
+                if (gm.IsExtraRound())
+                {
+                    StartHeartbeat();
+                }
                 break;
 
             case GameState.Result:
                 _playerButtonUI.SetActive(false);
+                StopHeartbeat();
                 ShowChoices();
                 break;
 
@@ -305,14 +318,14 @@ public class VisualManager : MonoBehaviour
 
     private void OnPlayAgainButtonClicked()
     {
-        // 1. 호스트 특권: 방에 혼자 남았다면 묻지도 따지지도 않고 바로 대기실로 리로드!
+        // 호스트: 방에 혼자 남았다면 대기실로 리로드
         if (NetworkManager.Singleton.IsServer && _opponentLeft)
         {
             NetworkManager.Singleton.SceneManager.LoadScene("OnlineScene", LoadSceneMode.Single);
             return;
         }
 
-        // 2. 상대가 있다면 버튼 끄고 기다림 모드로 전환
+        // 상대가 있다면 버튼 끄고 기다림 모드로 전환
         _playAgainButton.interactable = false;
         _noticeText.text = "Waiting for opponent...";
 
@@ -326,22 +339,20 @@ public class VisualManager : MonoBehaviour
         _opponentLeft = true;
         _noticeText.text = "Opponent has disconnected.";
 
-        // 1. 상대방이 나간 경우 (클라이언트가 탈주 / 호스트는 유지됨)
+        // 클라이언트 퇴장 시
         if (clientId != NetworkManager.Singleton.LocalClientId)
         {
-            // 내가 호스트라면 상대가 나갔으므로 Play Again을 재활성화!
             if (NetworkManager.Singleton.IsServer)
             {
                 _playAgainButton.interactable = true;
             }
         }
-        // 2. 내가 끊긴 경우 (호스트가 메인메뉴로 가서 서버가 터짐 -> 클라이언트 강제 종료됨)
+        // 호스트 퇴장 시
         else
         {
-            // 클라이언트는 방장이 없으므로 Play Again 무조건 잠금!
             _playAgainButton.interactable = false;
 
-            // 게임 도중 터졌을 상황을 대비해 강제로 게임오버 패널 띄우기
+            // 강제로 게임오버 패널 띄움
             if (gm.State.Value != GameState.GameOver)
             {
                 _pauseButton.interactable = false;
@@ -361,6 +372,40 @@ public class VisualManager : MonoBehaviour
     {
         _pausePanel.SetActive(false);
         _pauseButton.interactable = true;
+    }
+
+    private void StartHeartbeat()
+    {
+        if (_heartbeatCoroutine != null)
+        {
+            StopCoroutine(_heartbeatCoroutine);
+        }
+
+        _tensionVolume.gameObject.SetActive(true);
+        _heartbeatCoroutine = StartCoroutine(HeartbeatRoutine());
+    }
+
+    private void StopHeartbeat()
+    {
+        if (_heartbeatCoroutine != null)
+        {
+            StopCoroutine(_heartbeatCoroutine);
+            _heartbeatCoroutine = null;
+        }
+
+        _tensionVolume.weight = 0f;
+    }
+
+    private IEnumerator HeartbeatRoutine()
+    {
+        while (true)
+        {
+            float pulse = (Mathf.Sin(Time.time * _heartbeatSpeed) + 1f) / 2f;
+
+            _tensionVolume.weight = Mathf.Lerp(0.2f, 1.0f, pulse);
+
+            yield return null;
+        }
     }
 
     private void OnDestroy()
