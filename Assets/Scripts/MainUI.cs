@@ -13,7 +13,8 @@ using System;
 
 public class MainUI : MonoBehaviour
 {
-    [HideInInspector] public static string JoinCode = ""; // 방 입장 시 사용할 참가 코드
+    [HideInInspector] public static bool IsLocalMode { get; private set; } = false;
+    [HideInInspector] public static string JoinCode { get; private set; } = ""; // 방 입장 시 사용할 참가 코드
 
     [SerializeField] private GameObject _modeSelectPanel; // 모드 선택 패널
     [SerializeField] private GameObject _networkPanel; // 네트워크 UI 패널
@@ -37,7 +38,7 @@ public class MainUI : MonoBehaviour
         _modeSelectPanel.SetActive(true);
         _networkPanel.SetActive(false);
 
-        _localModeButton.onClick.AddListener(() => SceneManager.LoadScene("LocalScene"));
+        _localModeButton.onClick.AddListener(OnLocalModeSelected);
         _onlineModeButton.onClick.AddListener(OnOnlineModeSelected);
         _backButton.onClick.AddListener(OnBackButtonClicked);
 
@@ -45,8 +46,23 @@ public class MainUI : MonoBehaviour
         _clientButton.onClick.AddListener(() => StartClientWithRelay(_joinCodeInput.text));
     }
 
+    private void OnLocalModeSelected()
+    {
+        IsLocalMode = true;
+
+        if (NetworkManager.Singleton.TryGetComponent<UnityTransport>(out var transport))
+        {
+            transport.SetConnectionData("127.0.0.1", 7777);
+        }
+
+        NetworkManager.Singleton.StartHost();
+        NetworkManager.Singleton.SceneManager.LoadScene("GameScene", LoadSceneMode.Single);
+    }
+
     private async void OnOnlineModeSelected()
     {
+        IsLocalMode = false;
+
         _cancelConnection = false;
         _modeSelectPanel.SetActive(false);
         _networkPanel.SetActive(true);
@@ -124,13 +140,11 @@ public class MainUI : MonoBehaviour
             JoinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
             if (_cancelConnection) return;
 
-            //_joinCodeDisplayText.text = $"Join Code\n{myJoinCode}";
-
             RelayServerData relayServerData = allocation.ToRelayServerData("dtls");
             NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(relayServerData);
 
             NetworkManager.Singleton.StartHost();
-            NetworkManager.Singleton.SceneManager.LoadScene("OnlineScene", LoadSceneMode.Single);
+            NetworkManager.Singleton.SceneManager.LoadScene("GameScene", LoadSceneMode.Single);
         }
         catch (RelayServiceException e)
         {

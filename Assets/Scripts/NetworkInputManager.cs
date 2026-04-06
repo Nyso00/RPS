@@ -9,9 +9,16 @@ public class NetworkInputManager : Singleton<NetworkInputManager>
         base.Awake();
 
         _controls = new GameControls();
-        _controls.Player1.Rock.performed += ctx => TrySend(RPS.Rock);
-        _controls.Player1.Paper.performed += ctx => TrySend(RPS.Paper);
-        _controls.Player1.Scissors.performed += ctx => TrySend(RPS.Scissors);
+        _controls.Player1.Rock.performed += ctx => TrySend(RPS.Rock, 1);
+        _controls.Player1.Paper.performed += ctx => TrySend(RPS.Paper, 1);
+        _controls.Player1.Scissors.performed += ctx => TrySend(RPS.Scissors, 1);
+
+        if (MainUI.IsLocalMode)
+        {
+            _controls.Player2.Rock.performed += ctx => TrySend(RPS.Rock, 2);
+            _controls.Player2.Paper.performed += ctx => TrySend(RPS.Paper, 2);
+            _controls.Player2.Scissors.performed += ctx => TrySend(RPS.Scissors, 2);
+        }
     }
 
     private void Start()
@@ -34,7 +41,7 @@ public class NetworkInputManager : Singleton<NetworkInputManager>
     //     _mySender = sender;
     // }
 
-    private void TrySend(RPS choice)
+    private void TrySend(RPS choice, int playerNum)
     {
         if (NetworkGameManager.Instance == null || NetworkManager.Singleton == null || !NetworkManager.Singleton.IsConnectedClient)
         {
@@ -52,7 +59,7 @@ public class NetworkInputManager : Singleton<NetworkInputManager>
         {
             return;
         }
-        mySender.SendChoiceToServer(choice);
+        mySender.SendChoiceToServer(choice, playerNum);
     }
 
     protected override void OnDestroy()

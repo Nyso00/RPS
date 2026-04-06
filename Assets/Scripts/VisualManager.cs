@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 using System;
 using Unity.Rendering;
 using UnityEngine.Rendering;
+using NUnit.Framework;
 
 public class VisualManager : MonoBehaviour
 {
@@ -17,7 +18,8 @@ public class VisualManager : MonoBehaviour
     [SerializeField] private Image _myChoiceImage;
     [SerializeField] private Image _enemyChoiceImage;
 
-    [SerializeField] private GameObject _playerButtonUI;
+    [SerializeField] private GameObject _player1ButtonUI;
+    [SerializeField] private GameObject _player2ButtonUI;
 
     [Header("가위바위보 Sprite")]
     [SerializeField] private Sprite _rockSprite;
@@ -59,7 +61,6 @@ public class VisualManager : MonoBehaviour
 
     private int CurrentScore => IsPlayer1 ? gm.GameScore : -gm.GameScore;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     private void Start()
     {
         gm = NetworkGameManager.Instance;
@@ -131,7 +132,11 @@ public class VisualManager : MonoBehaviour
 
             case GameState.Playing:
                 HideChoiceImages();
-                _playerButtonUI.SetActive(true);
+                _player1ButtonUI.SetActive(true);
+                if (MainUI.IsLocalMode)
+                {
+                    _player2ButtonUI.SetActive(true);
+                }
                 _roundText.text = gm.IsExtraRound() ? "Extra Round" : $"Round {gm.RoundNum.Value}";
 
                 if (gm.IsDestroyPhase.Value)
@@ -146,7 +151,8 @@ public class VisualManager : MonoBehaviour
                 break;
 
             case GameState.Result:
-                _playerButtonUI.SetActive(false);
+                _player1ButtonUI.SetActive(false);
+                _player2ButtonUI.SetActive(false);
                 StopHeartbeat();
                 ShowChoices();
                 break;
@@ -174,17 +180,14 @@ public class VisualManager : MonoBehaviour
 
             case GameState.GameOver:
                 HideChoiceImages();
-                if (_opponentLeft || CurrentScore > 0)
+
+                if (MainUI.IsLocalMode)
                 {
-                    _roundText.text = "YOU WIN!";
-                }
-                else if (CurrentScore < 0)
-                {
-                    _roundText.text = "YOU LOSE!";
+                    _roundText.text = CurrentScore > 0 ? "Player 1 Wins!" : CurrentScore < 0 ? "Player 2 Wins!" : "DRAW!";
                 }
                 else
                 {
-                    _roundText.text = "DRAW!";
+                    _roundText.text = (_opponentLeft || CurrentScore > 0) ? "YOU WIN!" : CurrentScore < 0 ? "YOU LOSE!" : "DRAW!";
                 }
 
                 _pauseButton.interactable = false;
@@ -319,9 +322,9 @@ public class VisualManager : MonoBehaviour
     private void OnPlayAgainButtonClicked()
     {
         // 호스트: 방에 혼자 남았다면 대기실로 리로드
-        if (NetworkManager.Singleton.IsServer && _opponentLeft)
+        if (MainUI.IsLocalMode || (NetworkManager.Singleton.IsServer && _opponentLeft))
         {
-            NetworkManager.Singleton.SceneManager.LoadScene("OnlineScene", LoadSceneMode.Single);
+            NetworkManager.Singleton.SceneManager.LoadScene("GameScene", LoadSceneMode.Single);
             return;
         }
 

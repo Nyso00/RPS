@@ -71,11 +71,6 @@ public class Bridge : Singleton<Bridge>
         Blocks[_destroyedIdx].SetActive(false);
         Blocks[Blocks.Length - _destroyedIdx - 1].SetActive(false);
     }
-
-    public bool IsOutOfRange(int pos)
-    {
-        return pos <= _destroyedIdx || pos >= Blocks.Length - 1 - _destroyedIdx;
-    }
 }
 
 

@@ -6,12 +6,6 @@ public enum RPS
     Scissors
 }
 
-public enum PlayerNum
-{
-    Player1,
-    Player2
-}
-
 public enum GameState
 {
     WaitingForPlayers,

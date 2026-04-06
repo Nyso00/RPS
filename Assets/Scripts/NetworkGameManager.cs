@@ -53,7 +53,14 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
 
     public override void OnNetworkSpawn()
     {
-        if (IsServer)
+        if (MainUI.IsLocalMode)
+        {
+            P1ClientId.Value = NetworkManager.LocalClientId;
+            P2ClientId.Value = NetworkManager.LocalClientId;
+            ScoreToWin.Value = Bridge.Instance.BlockCountOfOneSide;
+            StartCoroutine(PlayRounds());
+        }
+        else if (IsServer)
         {
             P1ClientId.Value = NetworkManager.LocalClientId;
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
@@ -220,19 +227,37 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
         return RoundNum.Value > _maxRounds;
     }
 
-    public void SetPlayerChoice(ulong clientId, RPS choice)
+    public void SetPlayerChoice(ulong clientId, RPS choice, int playerNum)
     {
         if (State.Value != GameState.Playing)
         {
             return;
         }
 
-        if (clientId == P1ClientId.Value)
+        int targetPlayer = 0;
+
+        if (MainUI.IsLocalMode)
+        {
+            targetPlayer = playerNum;
+        }
+        else
+        {
+            if (clientId == P1ClientId.Value)
+            {
+                targetPlayer = 1;
+            }
+            else if (clientId == P2ClientId.Value)
+            {
+                targetPlayer = 2;
+            }
+        }
+
+        if (targetPlayer == 1)
         {
             _p1Choice = choice;
             P1SubmitCount.Value++;
         }
-        else if (clientId == P2ClientId.Value)
+        else if (targetPlayer == 2)
         {
             _p2Choice = choice;
             P2SubmitCount.Value++;
@@ -252,7 +277,7 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
 
         if (P1WantsRestart.Value && P2WantsRestart.Value)
         {
-            NetworkManager.Singleton.SceneManager.LoadScene("OnlineScene", UnityEngine.SceneManagement.LoadSceneMode.Single);
+            NetworkManager.Singleton.SceneManager.LoadScene("GameScene", UnityEngine.SceneManagement.LoadSceneMode.Single);
         }
     }
 
