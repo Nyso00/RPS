@@ -116,18 +116,18 @@ public class VisualManager : MonoBehaviour
         switch (newState)
         {
             case GameState.WaitingForPlayers:
-                _joinCodeDisplayText.GetComponent<TextMeshProUGUI>().text = $"Join Code\n{MainUI.JoinCode}";
+                _joinCodeDisplayText.GetComponent<TextMeshProUGUI>().text = GameStrings.JoinCodeDisplay(MainUI.JoinCode);
                 _joinCodeDisplayText.SetActive(true);
-                _roundText.text = "Waiting for Players...";
+                _roundText.text = GameStrings.WaitingForPlayers;
                 break;
 
             case GameState.Ready:
                 _joinCodeDisplayText.SetActive(false);
-                _roundText.text = "Ready...";
+                _roundText.text = GameStrings.Ready;
                 break;
 
             case GameState.ReadyForExtraRound:
-                _roundText.text = "Ready for Extra Round...";
+                _roundText.text = GameStrings.ReadyExtra;
                 break;
 
             case GameState.Playing:
@@ -137,7 +137,7 @@ public class VisualManager : MonoBehaviour
                 {
                     _player2ButtonUI.SetActive(true);
                 }
-                _roundText.text = gm.IsExtraRound() ? "Extra Round" : $"Round {gm.RoundNum.Value}";
+                _roundText.text = gm.IsExtraRound() ? GameStrings.ExtraRound : GameStrings.Round(gm.RoundNum.Value);
 
                 if (gm.IsDestroyPhase.Value)
                 {
@@ -183,11 +183,11 @@ public class VisualManager : MonoBehaviour
 
                 if (MainUI.IsLocalMode)
                 {
-                    _roundText.text = CurrentScore > 0 ? "Player 1 Wins!" : CurrentScore < 0 ? "Player 2 Wins!" : "DRAW!";
+                    _roundText.text = CurrentScore > 0 ? GameStrings.PlayerWin(1) : CurrentScore < 0 ? GameStrings.PlayerWin(2) : GameStrings.Draw;
                 }
                 else
                 {
-                    _roundText.text = (_opponentLeft || CurrentScore > 0) ? "YOU WIN!" : CurrentScore < 0 ? "YOU LOSE!" : "DRAW!";
+                    _roundText.text = (_opponentLeft || CurrentScore > 0) ? GameStrings.YouWin : CurrentScore < 0 ? GameStrings.YouLose : GameStrings.Draw;
                 }
 
                 _pauseButton.interactable = false;
@@ -316,7 +316,7 @@ public class VisualManager : MonoBehaviour
     {
         NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
         NetworkManager.Singleton.Shutdown();
-        SceneManager.LoadScene("MainScene");
+        SceneManager.LoadScene(SceneNames.MainMenu);
     }
 
     private void OnPlayAgainButtonClicked()
@@ -324,13 +324,13 @@ public class VisualManager : MonoBehaviour
         // 호스트: 방에 혼자 남았다면 대기실로 리로드
         if (MainUI.IsLocalMode || (NetworkManager.Singleton.IsServer && _opponentLeft))
         {
-            NetworkManager.Singleton.SceneManager.LoadScene("GameScene", LoadSceneMode.Single);
+            NetworkManager.Singleton.SceneManager.LoadScene(SceneNames.GameScene, LoadSceneMode.Single);
             return;
         }
 
         // 상대가 있다면 버튼 끄고 기다림 모드로 전환
         _playAgainButton.interactable = false;
-        _noticeText.text = "Waiting for opponent...";
+        _noticeText.text = GameStrings.WaitingOpponent;
 
         // 서버로 재시작 요청 RPC 발송
         var mySender = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<PlayerInputSender>();
@@ -340,7 +340,7 @@ public class VisualManager : MonoBehaviour
     private void OnClientDisconnected(ulong clientId)
     {
         _opponentLeft = true;
-        _noticeText.text = "Opponent has disconnected.";
+        _noticeText.text = GameStrings.OpponentDisconnected;
 
         // 클라이언트 퇴장 시
         if (clientId != NetworkManager.Singleton.LocalClientId)
@@ -360,7 +360,7 @@ public class VisualManager : MonoBehaviour
             {
                 _pauseButton.interactable = false;
                 _gameOverPanel.SetActive(true);
-                _roundText.text = "YOU WIN!";
+                _roundText.text = GameStrings.YouWin;
             }
         }
     }

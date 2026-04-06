@@ -277,7 +277,7 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
 
         if (P1WantsRestart.Value && P2WantsRestart.Value)
         {
-            NetworkManager.Singleton.SceneManager.LoadScene("GameScene", UnityEngine.SceneManagement.LoadSceneMode.Single);
+            NetworkManager.Singleton.SceneManager.LoadScene(SceneNames.GameScene, UnityEngine.SceneManagement.LoadSceneMode.Single);
         }
     }
 

@@ -56,7 +56,7 @@ public class MainUI : MonoBehaviour
         }
 
         NetworkManager.Singleton.StartHost();
-        NetworkManager.Singleton.SceneManager.LoadScene("GameScene", LoadSceneMode.Single);
+        NetworkManager.Singleton.SceneManager.LoadScene(SceneNames.GameScene, LoadSceneMode.Single);
     }
 
     private async void OnOnlineModeSelected()
@@ -71,7 +71,7 @@ public class MainUI : MonoBehaviour
         _hostButton.interactable = false;
         _clientButton.interactable = false;
         _backButton.interactable = true;
-        _statusText.text = "Connecting to Unity Server...";
+        _statusText.text = GameStrings.ConnectingToServer;
 
         // 2. 유니티 익명 로그인 진행
         try
@@ -97,12 +97,12 @@ public class MainUI : MonoBehaviour
         }
         catch (Exception e)
         {
-            _statusText.text = "Server connection failed.";
+            _statusText.text = GameStrings.ConnectionFailed;
             Debug.LogError($"Server connection failed: {e}");
         }
 
         // 3. 로그인이 완료시 버튼 활성화
-        _statusText.text = "Successfully connected to server.";
+        _statusText.text = GameStrings.ConnectionSuccess;
         _hostButton.interactable = true;
         _clientButton.interactable = true;
     }
@@ -128,7 +128,7 @@ public class MainUI : MonoBehaviour
 
     private async void StartHostWithRelay()
     {
-        _statusText.text = "Creating room...";
+        _statusText.text = GameStrings.CreatingRoom;
         _hostButton.interactable = false;
         _clientButton.interactable = false;
 
@@ -144,12 +144,12 @@ public class MainUI : MonoBehaviour
             NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(relayServerData);
 
             NetworkManager.Singleton.StartHost();
-            NetworkManager.Singleton.SceneManager.LoadScene("GameScene", LoadSceneMode.Single);
+            NetworkManager.Singleton.SceneManager.LoadScene(SceneNames.GameScene, LoadSceneMode.Single);
         }
         catch (RelayServiceException e)
         {
             if (_cancelConnection) return;
-            _statusText.text = "Failed to create room.";
+            _statusText.text = GameStrings.CreateRoomFailed;
             Debug.LogError($"Failed to create room: {e}");
             _hostButton.interactable = true;
             _clientButton.interactable = true;
@@ -161,11 +161,11 @@ public class MainUI : MonoBehaviour
         code = code.Trim().ToUpper();
         if (string.IsNullOrEmpty(code))
         {
-            _statusText.text = "Please enter a code.";
+            _statusText.text = GameStrings.NoCodeInput;
             return;
         }
 
-        _statusText.text = "Connecting to room...";
+        _statusText.text = GameStrings.ConnectingToRoom;
         _hostButton.interactable = false;
         _clientButton.interactable = false;
 
@@ -182,7 +182,7 @@ public class MainUI : MonoBehaviour
         catch (RelayServiceException e)
         {
             if (_cancelConnection) return;
-            _statusText.text = "Please check your code and try again.";
+            _statusText.text = GameStrings.InvalidCode;
             Debug.LogError($"Failed to connect to room: {e}");
             _hostButton.interactable = true;
             _clientButton.interactable = true;
