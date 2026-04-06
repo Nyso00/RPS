@@ -71,7 +71,7 @@ public class MainUI : MonoBehaviour
         _hostButton.interactable = false;
         _clientButton.interactable = false;
         _backButton.interactable = true;
-        _statusText.text = GameStrings.ConnectingToServer;
+        _statusText.text = GameStrings.ServerConnecting;
 
         // 2. 유니티 익명 로그인 진행
         try
@@ -97,12 +97,12 @@ public class MainUI : MonoBehaviour
         }
         catch (Exception e)
         {
-            _statusText.text = GameStrings.ConnectionFailed;
+            _statusText.text = GameStrings.ServerConnectFailed;
             Debug.LogError($"Server connection failed: {e}");
         }
 
         // 3. 로그인이 완료시 버튼 활성화
-        _statusText.text = GameStrings.ConnectionSuccess;
+        _statusText.text = GameStrings.ServerConnectSuccess;
         _hostButton.interactable = true;
         _clientButton.interactable = true;
     }
@@ -128,7 +128,7 @@ public class MainUI : MonoBehaviour
 
     private async void StartHostWithRelay()
     {
-        _statusText.text = GameStrings.CreatingRoom;
+        _statusText.text = GameStrings.RoomCreating;
         _hostButton.interactable = false;
         _clientButton.interactable = false;
 
@@ -149,7 +149,7 @@ public class MainUI : MonoBehaviour
         catch (RelayServiceException e)
         {
             if (_cancelConnection) return;
-            _statusText.text = GameStrings.CreateRoomFailed;
+            _statusText.text = GameStrings.RoomCreateFailed;
             Debug.LogError($"Failed to create room: {e}");
             _hostButton.interactable = true;
             _clientButton.interactable = true;
@@ -165,7 +165,7 @@ public class MainUI : MonoBehaviour
             return;
         }
 
-        _statusText.text = GameStrings.ConnectingToRoom;
+        _statusText.text = GameStrings.RoomJoining;
         _hostButton.interactable = false;
         _clientButton.interactable = false;
 
@@ -182,7 +182,7 @@ public class MainUI : MonoBehaviour
         catch (RelayServiceException e)
         {
             if (_cancelConnection) return;
-            _statusText.text = GameStrings.InvalidCode;
+            _statusText.text = GameStrings.RoomJoinFailed;
             Debug.LogError($"Failed to connect to room: {e}");
             _hostButton.interactable = true;
             _clientButton.interactable = true;

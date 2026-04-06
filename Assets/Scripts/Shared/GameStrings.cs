@@ -5,18 +5,18 @@ public static class GameStrings
     // -----------------------------------------
 
     // MainUI - server connection
-    public const string ConnectingToServer = "Connecting to Unity Server...";
-    public const string ConnectionFailed = "Server connection failed.";
-    public const string ConnectionSuccess = "Successfully connected to server.";
+    public const string ServerConnecting = "Connecting to Unity Server...";
+    public const string ServerConnectFailed = "Server connection failed.";
+    public const string ServerConnectSuccess = "Successfully connected to server.";
 
     // MainUI - host
-    public const string CreatingRoom = "Creating room...";
-    public const string CreateRoomFailed = "Failed to create room.";
+    public const string RoomCreating = "Creating room...";
+    public const string RoomCreateFailed = "Failed to create room.";
 
     // MainUI - client
-    public const string ConnectingToRoom = "Connecting to room...";
+    public const string RoomJoining = "Connecting to room...";
+    public const string RoomJoinFailed = "Please check your code and try again.";
     public const string NoCodeInput = "Please enter a code.";
-    public const string InvalidCode = "Please check your code and try again.";
 
     // round states
     public const string ExtraRound = "Extra Round";
