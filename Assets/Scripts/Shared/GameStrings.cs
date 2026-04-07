@@ -23,27 +23,28 @@ public static class GameStrings
     public const string WaitingForPlayers = "Waiting for Players...";
     public const string Ready = "Ready...";
     public const string ReadyExtra = "Ready for Extra Round...";
-    
+
     // game result
     public const string YouWin = "YOU WIN!";
     public const string YouLose = "YOU LOSE!";
     public const string Draw = "DRAW!";
 
     // notice text
-    public const string WaitingOpponent = "Waiting for opponent...";
-    public const string OpponentDisconnected = "Opponent has disconnected.";
+    public const string NoticeWaitingOpponent = "Waiting for opponent...";
+    public const string NoticeOpponentDisconnected = "Opponent has disconnected.";
+    public const string NoticeRoomDisconnection = "Disconnected from room.";
 
 
     // -----------------------------------------
     // static string methods
     // -----------------------------------------
-    
+
     // "Round 1", "Round 2"
     public static string Round(int n) => $"Round {n}";
-    
+
     // "Join Code \n ABCDEF"
     public static string JoinCodeDisplay(string code) => $"Join Code\n{code}";
-    
+
     // "Player 1 Wins!", "Player 2 Wins!"
     public static string PlayerWin(int playerNum) => $"Player {playerNum} Wins!";
 }

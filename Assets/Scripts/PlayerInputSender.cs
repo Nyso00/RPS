@@ -17,14 +17,14 @@ public class PlayerInputSender : NetworkBehaviour
     private void SubmitChoiceServerRpc(RPS choice, int playerNum, ServerRpcParams rpcParams = default)
     {
         ulong senderId = rpcParams.Receive.SenderClientId;
-        NetworkGameManager.Instance.SetPlayerChoice(senderId, choice, playerNum);
+        GameManager.Instance.SetPlayerChoice(senderId, choice, playerNum);
     }
 
     [ServerRpc]
     private void RequestRestartServerRpc(ServerRpcParams rpcParams = default)
     {
         ulong senderId = rpcParams.Receive.SenderClientId;
-        NetworkGameManager.Instance.RequestRestartFromClient(senderId);
+        GameManager.Instance.RequestRestartFromClient(senderId);
     }
 
 }

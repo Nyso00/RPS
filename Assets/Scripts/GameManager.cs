@@ -2,8 +2,9 @@ using UnityEngine;
 using System.Collections;
 using Unity.Netcode;
 using System;
+using UnityEngine.SceneManagement;
 
-public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
+public class GameManager : NetworkSingleton<GameManager>
 {
     [Header("시간 변수")]
     [SerializeField] private float _startDelay = 1.0f;
@@ -50,36 +51,52 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
     private int _currentDestroyPhase = 0;
     private enum RoundResult { Draw, Player1Win, Player2Win }
 
+    public event Action<GameState> OnStateChanged;
+    public event Action<int> OnPlayerSubmit;
+    public event Action OnWaitingForRestart;
+    public event Action OnMyDisconnect;
+    public event Action OnOpponentDisconnect;
+
+    private bool _opponentLeft = false;
+    private Coroutine _playRoundsCoroutine;
+
 
     public override void OnNetworkSpawn()
     {
+        State.OnValueChanged += (oldState, newState) => StartCoroutine(DelayStateChange(newState));
+        NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+
         if (MainUI.IsLocalMode)
         {
             P1ClientId.Value = NetworkManager.LocalClientId;
             P2ClientId.Value = NetworkManager.LocalClientId;
             ScoreToWin.Value = Bridge.Instance.BlockCountOfOneSide;
-            StartCoroutine(PlayRounds());
+            _playRoundsCoroutine = StartCoroutine(PlayRounds());
         }
         else if (IsServer)
         {
             P1ClientId.Value = NetworkManager.LocalClientId;
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
-            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected_Server;
             ScoreToWin.Value = Bridge.Instance.BlockCountOfOneSide;
 
             if (NetworkManager.Singleton.ConnectedClientsIds.Count >= 2)
             {
-                // 나(호스트)를 제외한 나머지 손님의 ID를 찾아서 연결 처리 함수를 '강제로' 실행해 줍니다.
                 foreach (ulong connectedId in NetworkManager.Singleton.ConnectedClientsIds)
                 {
                     if (connectedId != NetworkManager.LocalClientId)
                     {
-                        OnClientConnected(connectedId); // 기존에 만들어두신 연결 함수 재활용!
-                        break; // 2인용 게임이므로 한 명 찾았으면 끝냅니다.
+                        OnClientConnected(connectedId);
+                        break;
                     }
                 }
             }
         }
+    }
+
+    private IEnumerator DelayStateChange(GameState newState)
+    {
+        yield return null;
+        OnStateChanged?.Invoke(newState);
     }
 
     private void OnClientConnected(ulong clientId)
@@ -87,7 +104,7 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
         if (NetworkManager.Singleton.ConnectedClients.Count == 2)
         {
             P2ClientId.Value = clientId;
-            StartCoroutine(PlayRounds());
+            _playRoundsCoroutine = StartCoroutine(PlayRounds());
         }
     }
 
@@ -262,6 +279,12 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
             _p2Choice = choice;
             P2SubmitCount.Value++;
         }
+        else
+        {
+            Debug.LogWarning($"Received choice from unknown client ID: {clientId}");
+        }
+
+        NotifySubmitClientRpc(targetPlayer);
     }
 
     public void RequestRestartFromClient(ulong clientId)
@@ -277,19 +300,49 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
 
         if (P1WantsRestart.Value && P2WantsRestart.Value)
         {
-            NetworkManager.Singleton.SceneManager.LoadScene(SceneNames.GameScene, UnityEngine.SceneManagement.LoadSceneMode.Single);
+            NetworkManager.Singleton.SceneManager.LoadScene(SceneNames.GameScene, LoadSceneMode.Single);
         }
     }
 
-    private void OnClientDisconnected_Server(ulong clientId)
+    public void RequestPlayAgain()
     {
-        if (clientId == P2ClientId.Value)
+        // 로컬 or 호스트인데 상대 나감 -> 바로 재시작
+        if (MainUI.IsLocalMode || (NetworkManager.Singleton.IsServer && _opponentLeft))
         {
-            if (State.Value != GameState.GameOver)
-            {
-                StopAllCoroutines();
-                State.Value = GameState.GameOver;
-            }
+            NetworkManager.Singleton.SceneManager.LoadScene(SceneNames.GameScene, LoadSceneMode.Single);
+        }
+        else // 상대가 있는데 재시작 요청 -> 서버로 재시작 요청 RPC 발송
+        {
+            OnWaitingForRestart?.Invoke();
+
+            // 서버로 재시작 요청 RPC 발송
+            var mySender = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<PlayerInputSender>();
+            mySender.SendRestartRequestToServer();
+        }
+    }
+
+    public void ReturnToMainMenu()
+    {
+        // NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+        NetworkManager.Singleton.Shutdown();
+        SceneManager.LoadScene(SceneNames.MainMenu);
+    }
+    private void OnClientDisconnected(ulong clientId)
+    {
+        // 내가 호스트인데 연결 끊김 / 내가 클라이언트인데 상대나 내가 끊김
+        if (clientId == NetworkManager.Singleton.LocalClientId)
+        {
+            OnMyDisconnect?.Invoke();
+        }
+        else if (IsServer) // 내가 호스트인데 상대가 끊김
+        {
+            OnOpponentDisconnect?.Invoke();
+            _opponentLeft = true;
+        }
+
+        if (_playRoundsCoroutine != null)
+        {
+            StopCoroutine(_playRoundsCoroutine);
         }
     }
 
@@ -306,9 +359,19 @@ public class NetworkGameManager : NetworkSingleton<NetworkGameManager>
     {
         if (NetworkManager.Singleton != null)
         {
-            NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
-            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected_Server;
+            if (IsServer)
+            {
+                NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+            }
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
         }
         base.OnDestroy();
+    }
+
+
+    [ClientRpc]
+    private void NotifySubmitClientRpc(int playerNum, ClientRpcParams rpcParams = default)
+    {
+        OnPlayerSubmit?.Invoke(playerNum);
     }
 }

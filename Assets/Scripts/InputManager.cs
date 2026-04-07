@@ -1,6 +1,6 @@
 using Unity.Netcode;
 
-public class NetworkInputManager : Singleton<NetworkInputManager>
+public class InputManager : Singleton<InputManager>
 {
     private GameControls _controls;
 
@@ -23,7 +23,7 @@ public class NetworkInputManager : Singleton<NetworkInputManager>
 
     private void Start()
     {
-        NetworkGameManager.Instance.State.OnValueChanged += (oldState, newState) =>
+        GameManager.Instance.State.OnValueChanged += (oldState, newState) =>
         {
             if (newState == GameState.Playing)
             {
@@ -35,15 +35,9 @@ public class NetworkInputManager : Singleton<NetworkInputManager>
             }
         };
     }
-
-    // public void SetSender(PlayerInputSender sender)
-    // {
-    //     _mySender = sender;
-    // }
-
     private void TrySend(RPS choice, int playerNum)
     {
-        if (NetworkGameManager.Instance == null || NetworkManager.Singleton == null || !NetworkManager.Singleton.IsConnectedClient)
+        if (GameManager.Instance == null || NetworkManager.Singleton == null || !NetworkManager.Singleton.IsConnectedClient)
         {
             return;
         }
@@ -55,7 +49,7 @@ public class NetworkInputManager : Singleton<NetworkInputManager>
         }
 
         var mySender = playerObject.GetComponent<PlayerInputSender>();
-        if (mySender == null || NetworkGameManager.Instance.State.Value != GameState.Playing)
+        if (mySender == null || GameManager.Instance.State.Value != GameState.Playing)
         {
             return;
         }

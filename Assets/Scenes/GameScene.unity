@@ -488,7 +488,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &189907654
 RectTransform:
   m_ObjectHideFlags: 0
@@ -500,7 +500,10 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1356371770}
+  - {fileID: 1007668351}
+  - {fileID: 1078532264}
   m_Father: {fileID: 1233093614}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -563,7 +566,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &314919823
 RectTransform:
   m_ObjectHideFlags: 0
@@ -575,7 +578,9 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1608031464}
+  - {fileID: 326512052}
   m_Father: {fileID: 339709887}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -904,7 +909,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 821886924}
-  m_Father: {fileID: 339709887}
+  m_Father: {fileID: 314919823}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -920,13 +925,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 339709887}
+  - component: {fileID: 339709888}
   m_Layer: 5
   m_Name: PauseUI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &339709887
 RectTransform:
   m_ObjectHideFlags: 0
@@ -940,8 +946,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 314919823}
-  - {fileID: 1608031464}
-  - {fileID: 326512052}
   m_Father: {fileID: 829531419}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -949,6 +953,22 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &339709888
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 339709886}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 190e70f08fa060341a34cd922dfee34f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PauseUI
+  _pauseButton: {fileID: 540297650}
+  _pausePanel: {fileID: 314919822}
+  _resumeButton: {fileID: 1608031467}
+  _pauseMainMenuButton: {fileID: 326512049}
 --- !u!1001 &356362810
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1170,7 +1190,7 @@ GameObject:
   - component: {fileID: 447316022}
   - component: {fileID: 447316021}
   m_Layer: 5
-  m_Name: RoundNum
+  m_Name: RoundText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1845,6 +1865,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 695732795}
+  - component: {fileID: 695732796}
   m_Layer: 5
   m_Name: GameUI
   m_TagString: Untagged
@@ -1878,6 +1899,31 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &695732796
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 695732794}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbeb093e3ec17ea40ac751609a652698, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InGameHUD
+  _joinCodeDisplayText: {fileID: 785351812}
+  _roundText: {fileID: 447316021}
+  _timerGauge: {fileID: 1930819931}
+  _myChoiceImage: {fileID: 868824235}
+  _enemyChoiceImage: {fileID: 704000997}
+  _player1ButtonUI: {fileID: 1328865231}
+  _player2ButtonUI: {fileID: 1830804013}
+  _rockSprite: {fileID: -2182124076254010665, guid: d5195c202cbc40a47b5db8fa0a311f53, type: 3}
+  _paperSprite: {fileID: -1469909079130451432, guid: 23cf1e6ec4a4aba4aaaf17d2ca73a01c, type: 3}
+  _scissorsSprite: {fileID: 7766721758921934520, guid: 14088de59daf12b45b3a1fbf658412d1, type: 3}
+  _myCheckMarkImage: {fileID: 980314959}
+  _enemyCheckMarkImage: {fileID: 1828187384}
+  _drawSpeed: 3
 --- !u!1 &704000995
 GameObject:
   m_ObjectHideFlags: 0
@@ -3116,7 +3162,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 834493931}
-  m_Father: {fileID: 1233093614}
+  m_Father: {fileID: 189907654}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -3305,12 +3351,12 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1078532263}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1233093614}
+  m_Father: {fileID: 189907654}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -3572,13 +3618,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1233093614}
+  - component: {fileID: 1233093615}
   m_Layer: 5
   m_Name: GameOverUI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1233093614
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3592,9 +3639,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 189907654}
-  - {fileID: 1356371770}
-  - {fileID: 1007668351}
-  - {fileID: 1078532264}
   m_Father: {fileID: 829531419}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -3602,6 +3646,22 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: -70}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1233093615
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1233093613}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b7184b94a144fe4fb5cafbec9fd7117, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameOverUI
+  _gameOverPanel: {fileID: 189907653}
+  _playAgainButton: {fileID: 1356371771}
+  _mainMenuButton: {fileID: 1007668352}
+  _noticeText: {fileID: 1078532265}
 --- !u!1 &1275824537
 GameObject:
   m_ObjectHideFlags: 0
@@ -3880,7 +3940,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1726084655}
-  m_Father: {fileID: 1233093614}
+  m_Father: {fileID: 189907654}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -4376,7 +4436,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1722305020}
-  m_Father: {fileID: 339709887}
+  m_Father: {fileID: 314919823}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -5002,29 +5062,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f85c3c1e20127174080679792833c682, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VisualManager
-  _joinCodeDisplayText: {fileID: 785351812}
-  _roundText: {fileID: 447316021}
-  _timerGauge: {fileID: 1930819931}
-  _myChoiceImage: {fileID: 868824235}
-  _enemyChoiceImage: {fileID: 704000997}
-  _player1ButtonUI: {fileID: 1328865231}
-  _player2ButtonUI: {fileID: 1830804013}
-  _rockSprite: {fileID: -2182124076254010665, guid: d5195c202cbc40a47b5db8fa0a311f53, type: 3}
-  _paperSprite: {fileID: -1469909079130451432, guid: 23cf1e6ec4a4aba4aaaf17d2ca73a01c, type: 3}
-  _scissorsSprite: {fileID: 7766721758921934520, guid: 14088de59daf12b45b3a1fbf658412d1, type: 3}
-  _myCheckMarkImage: {fileID: 980314959}
-  _enemyCheckMarkImage: {fileID: 1828187384}
-  _drawSpeed: 3
   _myCharacter: {fileID: 1723008319}
   _enemyCharacter: {fileID: 2011227004}
-  _gameOverPanel: {fileID: 1233093613}
-  _playAgainButton: {fileID: 1356371771}
-  _mainMenuButton: {fileID: 1007668352}
-  _noticeText: {fileID: 1078532265}
-  _pauseButton: {fileID: 540297650}
-  _pausePanel: {fileID: 339709886}
-  _resumeButton: {fileID: 1608031467}
-  _pauseMainMenuButton: {fileID: 326512049}
   _tensionVolume: {fileID: 2043176957}
   _heartbeatSpeed: 5
 --- !u!4 &1825493262
