@@ -32,9 +32,9 @@ public class GameManager : NetworkSingleton<GameManager>
 
     [NonSerialized] public NetworkVariable<ulong> P1ClientId = new(ulong.MaxValue);
     [NonSerialized] public NetworkVariable<ulong> P2ClientId = new(ulong.MaxValue);
-
     //-----------------------------------------------------------------------------------------
 
+    // Score 관련 변수들
     private int _scoreToWin;
     private int _p1Score = 0;
     private int _p2Score = 0;
@@ -62,10 +62,13 @@ public class GameManager : NetworkSingleton<GameManager>
 
     public override void OnNetworkSpawn()
     {
+        // 구독
         State.OnValueChanged += (oldState, newState) => StartCoroutine(DelayStateChange(newState));
         NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+
         _scoreToWin = Bridge.Instance.BlockCountOfOneSide;
 
+        // P1, P2 ClientId 설정 및 게임 시작
         if (MainUI.IsLocalMode)
         {
             P1ClientId.Value = NetworkManager.LocalClientId;
@@ -77,6 +80,7 @@ public class GameManager : NetworkSingleton<GameManager>
             P1ClientId.Value = NetworkManager.LocalClientId;
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
 
+            // 이미 상대가 연결되어 있는 경우(모두 Play Again을 누른 경우) OnClientConnected를 직접 호출하여 게임 시작
             if (NetworkManager.Singleton.ConnectedClientsIds.Count >= 2)
             {
                 foreach (ulong connectedId in NetworkManager.Singleton.ConnectedClientsIds)
@@ -91,6 +95,7 @@ public class GameManager : NetworkSingleton<GameManager>
         }
     }
 
+    // NetworkVariable의 모든 변경이 마무리 되도록 1프레임 지연 후에 이벤트를 발생시킴
     private IEnumerator DelayStateChange(GameState newState)
     {
         yield return null;
@@ -105,7 +110,10 @@ public class GameManager : NetworkSingleton<GameManager>
             _playRoundsCoroutine = StartCoroutine(PlayRounds());
         }
     }
-
+    
+// -----------------------------------------------------------------------------------------
+//   게임 진행 코루틴 모음
+// -----------------------------------------------------------------------------------------
     private IEnumerator PlayRounds()
     {
         State.Value = GameState.Ready;
@@ -124,7 +132,7 @@ public class GameManager : NetworkSingleton<GameManager>
             // 3. 라운드 결과 판정: 패 공개, 플레이어 이동
             yield return StartCoroutine(EvaluateRoutine());
 
-            // 4. 1차 게임 오버 체크
+            // 4. 게임 오버 체크
             if (CheckGameOver())
             {
                 State.Value = GameState.GameOver;
@@ -198,6 +206,9 @@ public class GameManager : NetworkSingleton<GameManager>
         yield return new WaitForSeconds(MoveDuration);
     }
 
+// -----------------------------------------------------------------------------------------
+//   게임 진행 관련 함수 모음
+// -----------------------------------------------------------------------------------------
     private bool ShouldDestroyBlock()
     {
         bool shouldDestroyBlock = _currentDestroyPhase < _blockDestroyRounds.Length && RoundNum.Value == _blockDestroyRounds[_currentDestroyPhase];
@@ -244,7 +255,7 @@ public class GameManager : NetworkSingleton<GameManager>
         return RoundNum.Value > _maxRounds;
     }
 
-    public void SetPlayerChoice(ulong clientId, RPS choice, int playerNum)
+    private void SetPlayerChoice(ulong clientId, RPS choice, int playerNum)
     {
         if (State.Value != GameState.Playing)
         {
@@ -285,7 +296,12 @@ public class GameManager : NetworkSingleton<GameManager>
         NotifySubmitRpc(targetPlayer);
     }
 
-    public void RequestRestartFromClient(ulong clientId)
+// -----------------------------------------------------------------------------------------
+//   게임 재시작, 종료 관련 함수 모음
+// -----------------------------------------------------------------------------------------
+
+    // 둘 모두 재시작을 원할 경우(Play Again 버튼을 눌렀을 경우) 재시작
+    private void RequestRestartFromClient(ulong clientId)
     {
         if (clientId == P1ClientId.Value)
         {
@@ -302,6 +318,11 @@ public class GameManager : NetworkSingleton<GameManager>
         }
     }
 
+    /// <summary>
+    /// 재시작 요청을 하는 함수입니다. Play Again 버튼에 부착합니다.
+    /// - 로컬 모드이거나, 내가 호스트인데 상대가 이미 나간 경우에는 바로 게임 씬을 로딩하여 재시작합니다.
+    /// - 상대가 나가지 않은 경우에는 상대의 재시작 요청을 기다립니다. 상대가 재시작 요청을 하면 게임 씬을 로딩하여 재시작합니다.
+    /// </summary>
     public void RequestPlayAgain()
     {
         // 로컬 or 호스트인데 상대 나감 -> 바로 재시작
@@ -316,11 +337,15 @@ public class GameManager : NetworkSingleton<GameManager>
         }
     }
 
+    /// <summary>
+    /// 연결을 끊고 메인 메뉴 씬으로 돌아가는 함수입니다. Main Menu 버튼에 부착합니다.
+    /// </summary>
     public void ReturnToMainMenu()
     {
         NetworkManager.Singleton.Shutdown();
         SceneManager.LoadScene(SceneNames.MainMenu);
     }
+    
     private void OnClientDisconnected(ulong clientId)
     {
         // 내가 호스트인데 연결 끊김 / 내가 클라이언트인데 상대나 내가 끊김
@@ -359,13 +384,22 @@ public class GameManager : NetworkSingleton<GameManager>
         base.OnDestroy();
     }
 
-
+// -----------------------------------------------------------------------------------------
+//   RPCs
+// -----------------------------------------------------------------------------------------
+    // 가위바위보 버튼이 눌렸을 때, 해당 플레이어가 키를 눌렀음을 모든 클라이언트에게 전달 -> 체크 표시 띄우기 위함
     [Rpc(SendTo.ClientsAndHost)]
     private void NotifySubmitRpc(int playerNum, RpcParams rpcParams = default)
     {
         OnPlayerSubmit?.Invoke(playerNum);
     }
 
+    /// <summary>
+    /// ServerRpc / 플레이어가 가위, 바위, 보 중 하나를 선택했을 때 호출됩니다. 해당 플레이어의 선택을 서버에 전달하여 저장합니다.
+    /// </summary>
+    /// <param name="choice">플레이어가 고른 패</param>
+    /// <param name="playerNum">플레이어 번호(1, 2)</param>
+    /// <param name="rpcParams">RPC 파라미터</param>
     [Rpc(SendTo.Server)]
     public void SubmitChoiceRpc(RPS choice, int playerNum, RpcParams rpcParams = default)
     {
@@ -373,8 +407,9 @@ public class GameManager : NetworkSingleton<GameManager>
         SetPlayerChoice(senderId, choice, playerNum);
     }
 
+    // 서버에서 둘 모두의 재시작 요청 여부를 파악할 수 있도록 ID를 담아 ServerRpc 호출
     [Rpc(SendTo.Server)]
-    public void RequestRestartRpc(RpcParams rpcParams = default)
+    private void RequestRestartRpc(RpcParams rpcParams = default)
     {
         ulong senderId = rpcParams.Receive.SenderClientId;
         RequestRestartFromClient(senderId);

@@ -20,14 +20,21 @@ public class Bridge : Singleton<Bridge>
     // Getters
     public int BlockCountOfOneSide => _blockCountOfOneSide;
     public float BlockSpacing => _blockSpacing;
-
     public GameObject[] Blocks => _blocks;
 
     private int _destroyedIdx = 0;
     private Coroutine _blinkCoroutine;
 
-    public float GetBlockX(int index)
+    /// <summary>
+    /// Bridge에서 현재 상황에 따라 이동해야할 대상 블록의 X 좌표를 반환하는 함수입니다.
+    /// </summary>
+    /// <param name="score">현재 게임 스코어</param>
+    /// <param name="leftSide">왼쪽에 위치한 플레이어인지 여부</param>
+    /// <returns></returns>
+    public float GetBlockX(int score, bool leftSide)
     {
+        int index = BlockCountOfOneSide + (leftSide ? 0 : 1) + score;
+
         if (Blocks == null || index < 0 || index >= Blocks.Length)
         {
             return 0f;
@@ -36,12 +43,9 @@ public class Bridge : Singleton<Bridge>
         return Blocks[index].transform.position.x;
     }
 
-    public float GetBlockX(int score, bool leftSide)
-    {
-        int index = BlockCountOfOneSide + (leftSide ? 0 : 1) + score;
-        return GetBlockX(index);
-    }
-
+    /// <summary>
+    /// 블록이 파괴되기 전에 양쪽 끝 블록이 깜빡이는 효과를 시작하는 함수입니다.
+    /// </summary>
     public void BeforeDestroyBlock()
     {
         _blinkCoroutine = StartCoroutine(BlinkBlock());
@@ -68,6 +72,9 @@ public class Bridge : Singleton<Bridge>
         }
     }
 
+    /// <summary>
+    /// 양쪽 끝 블록을 파괴하는 함수입니다. 블록이 파괴되기 전에 BeforeDestroyBlock() 함수를 호출하여 깜빡이는 효과를 시작해야 합니다.
+    /// </summary>
     public void DestroyBlock()
     {
         if (_blinkCoroutine != null)
@@ -88,10 +95,10 @@ public class Bridge : Singleton<Bridge>
 }
 
 
-/*
-    Bridge의 블록을 Editor에서 자동으로 배치하는 스크립트입니다.
-    Bridge 오브젝트에 있는 Blocks 배열에 블록들을 할당하고 block spacing을 설정하면, "Arrange Blocks" 버튼을 누르면 블록들이 균등하게 배치됩니다.
-*/
+// ----------------------------------------------------------------------------------------
+//  Bridge의 블록을 Editor에서 자동으로 배치하는 스크립트입니다.
+//  Bridge 오브젝트에 있는 Blocks 배열에 블록들을 할당하고 block spacing을 설정하면, "Arrange Blocks" 버튼을 누르면 블록들이 균등하게 배치됩니다.
+// ----------------------------------------------------------------------------------------
 #if UNITY_EDITOR
 [CustomEditor(typeof(Bridge))]
 public class BridgeEditor : Editor

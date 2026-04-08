@@ -13,11 +13,11 @@ using System;
 
 public class MainUI : MonoBehaviour
 {
-    [HideInInspector] public static bool IsLocalMode { get; private set; } = false;
-    [HideInInspector] public static string JoinCode { get; private set; } = ""; // 방 입장 시 사용할 참가 코드
+    public static bool IsLocalMode { get; private set; } = false;
+    public static string JoinCode { get; private set; } = ""; // 방 입장 시 사용할 참가 코드
 
-    [SerializeField] private GameObject _modeSelectPanel; // 모드 선택 패널
-    [SerializeField] private GameObject _networkPanel; // 네트워크 UI 패널
+    [SerializeField] private GameObject _modeSelectPanel;
+    [SerializeField] private GameObject _networkPanel;
 
     [Header("모드 선택 UI")]
     [SerializeField] private Button _localModeButton;
@@ -31,13 +31,14 @@ public class MainUI : MonoBehaviour
     [SerializeField] private TMP_InputField _joinCodeInput;
     [SerializeField] private TextMeshProUGUI _statusText;
 
-    private bool _cancelConnection = false;
+    private bool _cancelConnection = false; // 연결 시도 중에 사용자가 뒤로 가기를 눌렀는지 여부를 나타내는 플래그
 
     private void Start()
     {
         _modeSelectPanel.SetActive(true);
         _networkPanel.SetActive(false);
 
+        // 버튼에 함수 부착
         _localModeButton.onClick.AddListener(OnLocalModeSelected);
         _onlineModeButton.onClick.AddListener(OnOnlineModeSelected);
         _backButton.onClick.AddListener(OnBackButtonClicked);
@@ -222,8 +223,7 @@ public class MainUI : MonoBehaviour
         if (!_cancelConnection)
         {
             _statusText.text = GameStrings.RoomJoinFailed;
-            _hostButton.interactable = true;
-            _clientButton.interactable = true;
+            SetStartButtonsInteractable(true);
         }
     }
 

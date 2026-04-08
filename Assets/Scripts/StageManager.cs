@@ -1,8 +1,11 @@
 using UnityEngine;
 using System.Collections;
 using Unity.Netcode;
-using System;
 using UnityEngine.Rendering;
+
+// -----------------------------------------------------------------------------------------
+// 게임의 주요 스테이지 연출과 플레이어 이동을 담당하는 스크립트입니다. GameManager의 상태 변화에 따라 플레이어 위치를 이동시키고 긴장감 연출을 위한 효과를 제어합니다.
+// -----------------------------------------------------------------------------------------
 
 public class StageManager : MonoBehaviour
 {
