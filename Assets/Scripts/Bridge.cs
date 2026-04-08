@@ -35,12 +35,12 @@ public class Bridge : Singleton<Bridge>
     {
         int index = BlockCountOfOneSide + (leftSide ? 0 : 1) + score;
 
-        if (Blocks == null || index < 0 || index >= Blocks.Length)
+        if (_blocks == null || index < 0 || index >= _blocks.Length)
         {
             return 0f;
         }
 
-        return Blocks[index].transform.position.x;
+        return _blocks[index].transform.position.x;
     }
 
     /// <summary>
@@ -54,8 +54,8 @@ public class Bridge : Singleton<Bridge>
     private IEnumerator BlinkBlock()
     {
         float elapsedTime = 0f;
-        Renderer leftBlockRenderer = Blocks[_destroyedIdx + 1].GetComponent<Renderer>();
-        Renderer rightBlockRenderer = Blocks[Blocks.Length - _destroyedIdx - 2].GetComponent<Renderer>();
+        Renderer leftBlockRenderer = _blocks[_destroyedIdx + 1].GetComponent<Renderer>();
+        Renderer rightBlockRenderer = _blocks[_blocks.Length - _destroyedIdx - 2].GetComponent<Renderer>();
 
         Color blockColor = leftBlockRenderer.material.color;
 
@@ -82,8 +82,8 @@ public class Bridge : Singleton<Bridge>
             StopCoroutine(_blinkCoroutine);
         }
         _destroyedIdx++;
-        Blocks[_destroyedIdx].SetActive(false);
-        Blocks[Blocks.Length - _destroyedIdx - 1].SetActive(false);
+        _blocks[_destroyedIdx].SetActive(false);
+        _blocks[_blocks.Length - _destroyedIdx - 1].SetActive(false);
     }
 
 #if UNITY_EDITOR

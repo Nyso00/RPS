@@ -32,13 +32,14 @@ public class GameManager : NetworkSingleton<GameManager>
 
     [NonSerialized] public NetworkVariable<ulong> P1ClientId = new(ulong.MaxValue);
     [NonSerialized] public NetworkVariable<ulong> P2ClientId = new(ulong.MaxValue);
+
+    [NonSerialized] private NetworkVariable<int> _p1Score = new(0);
+    [NonSerialized] private NetworkVariable<int> _p2Score = new(0);
     //-----------------------------------------------------------------------------------------
 
     // Score 관련 변수들
     private int _scoreToWin;
-    private int _p1Score = 0;
-    private int _p2Score = 0;
-    public int GameScore => _p1Score - _p2Score;
+    public int GameScore => _p1Score.Value - _p2Score.Value;
 
     private RPS _p1Choice = RPS.None;
     private RPS _p2Choice = RPS.None;
@@ -190,16 +191,16 @@ public class GameManager : NetworkSingleton<GameManager>
 
         if (winner == RoundResult.Player1Win)
         {
-            _p1Score++;
+            _p1Score.Value++;
         }
         else if (winner == RoundResult.Player2Win)
         {
-            _p2Score++;
+            _p2Score.Value++;
         }
 
-        if (IsDestroyPhase.Value && Math.Abs(GameScore) <= _scoreToWin)
+        if (IsDestroyPhase.Value && Mathf.Abs(GameScore) <= _scoreToWin)
         {
-            OnExecuteBlockDestroy?.Invoke();
+            NotifyBlockDestroyRpc();
         }
 
         State.Value = GameState.Move;
@@ -387,11 +388,17 @@ public class GameManager : NetworkSingleton<GameManager>
 // -----------------------------------------------------------------------------------------
 //   RPCs
 // -----------------------------------------------------------------------------------------
-    // 가위바위보 버튼이 눌렸을 때, 해당 플레이어가 키를 눌렀음을 모든 클라이언트에게 전달 -> 체크 표시 띄우기 위함
+
     [Rpc(SendTo.ClientsAndHost)]
     private void NotifySubmitRpc(int playerNum, RpcParams rpcParams = default)
     {
         OnPlayerSubmit?.Invoke(playerNum);
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    private void NotifyBlockDestroyRpc(RpcParams rpcParams = default)
+    {
+        OnExecuteBlockDestroy?.Invoke();
     }
 
     /// <summary>
