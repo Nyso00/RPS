@@ -24,6 +24,7 @@ public class StageManager : MonoBehaviour
     {
         _gm = GameManager.Instance;
         _gm.OnStateChanged += UpdateStageState;
+        _gm.OnExecuteBlockDestroy += ExecuteBlockDestroy;
 
         _myCharacter.position = new Vector3(Bridge.Instance.GetBlockX(0, true), _myCharacter.position.y, _myCharacter.position.z);
         _enemyCharacter.position = new Vector3(Bridge.Instance.GetBlockX(0, false), _enemyCharacter.position.y, _enemyCharacter.position.z);
@@ -51,12 +52,13 @@ public class StageManager : MonoBehaviour
 
             case GameState.Move:
                 MovePlayers();
-                if (_gm.IsDestroyPhase.Value && Mathf.Abs(CurrentScore) <= _gm.ScoreToWin.Value)
-                {
-                    Bridge.Instance.DestroyBlock();
-                }
                 break;
         }
+    }
+
+    private void ExecuteBlockDestroy()
+    {
+        Bridge.Instance.DestroyBlock();
     }
 
     private void MovePlayers()
@@ -128,5 +130,6 @@ public class StageManager : MonoBehaviour
     private void OnDestroy()
     {
         _gm.OnStateChanged -= UpdateStageState;
+        _gm.OnExecuteBlockDestroy -= ExecuteBlockDestroy;
     }
 }

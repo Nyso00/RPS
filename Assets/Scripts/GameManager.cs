@@ -33,16 +33,12 @@ public class GameManager : NetworkSingleton<GameManager>
     [NonSerialized] public NetworkVariable<ulong> P1ClientId = new(ulong.MaxValue);
     [NonSerialized] public NetworkVariable<ulong> P2ClientId = new(ulong.MaxValue);
 
-    [NonSerialized] public NetworkVariable<int> P1Score = new(0);
-    [NonSerialized] public NetworkVariable<int> P2Score = new(0);
-
-    [NonSerialized] public NetworkVariable<bool> P1WantsRestart = new(false);
-    [NonSerialized] public NetworkVariable<bool> P2WantsRestart = new(false);
-
-    [NonSerialized] public NetworkVariable<int> ScoreToWin = new(0);
     //-----------------------------------------------------------------------------------------
 
-    public int GameScore => P1Score.Value - P2Score.Value;
+    private int _scoreToWin;
+    private int _p1Score = 0;
+    private int _p2Score = 0;
+    public int GameScore => _p1Score - _p2Score;
 
     private RPS _p1Choice = RPS.None;
     private RPS _p2Choice = RPS.None;
@@ -55,6 +51,10 @@ public class GameManager : NetworkSingleton<GameManager>
     public event Action OnWaitingForRestart;
     public event Action OnMyDisconnect;
     public event Action OnOpponentDisconnect;
+    public event Action OnExecuteBlockDestroy;
+
+    private bool _p1WantsRestart = false;
+    private bool _p2WantsRestart = false;
 
     private bool _opponentLeft = false;
     private Coroutine _playRoundsCoroutine;
@@ -64,19 +64,18 @@ public class GameManager : NetworkSingleton<GameManager>
     {
         State.OnValueChanged += (oldState, newState) => StartCoroutine(DelayStateChange(newState));
         NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+        _scoreToWin = Bridge.Instance.BlockCountOfOneSide;
 
         if (MainUI.IsLocalMode)
         {
             P1ClientId.Value = NetworkManager.LocalClientId;
             P2ClientId.Value = NetworkManager.LocalClientId;
-            ScoreToWin.Value = Bridge.Instance.BlockCountOfOneSide;
             _playRoundsCoroutine = StartCoroutine(PlayRounds());
         }
         else if (IsServer)
         {
             P1ClientId.Value = NetworkManager.LocalClientId;
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
-            ScoreToWin.Value = Bridge.Instance.BlockCountOfOneSide;
 
             if (NetworkManager.Singleton.ConnectedClientsIds.Count >= 2)
             {
@@ -183,11 +182,16 @@ public class GameManager : NetworkSingleton<GameManager>
 
         if (winner == RoundResult.Player1Win)
         {
-            P1Score.Value++;
+            _p1Score++;
         }
         else if (winner == RoundResult.Player2Win)
         {
-            P2Score.Value++;
+            _p2Score++;
+        }
+
+        if (IsDestroyPhase.Value && Math.Abs(GameScore) <= _scoreToWin)
+        {
+            OnExecuteBlockDestroy?.Invoke();
         }
 
         State.Value = GameState.Move;
@@ -200,7 +204,7 @@ public class GameManager : NetworkSingleton<GameManager>
         if (shouldDestroyBlock)
         {
             _currentDestroyPhase++;
-            ScoreToWin.Value--;
+            _scoreToWin--;
         }
         return shouldDestroyBlock;
     }
@@ -232,7 +236,7 @@ public class GameManager : NetworkSingleton<GameManager>
 
     private bool CheckGameOver()
     {
-        return GameScore >= ScoreToWin.Value || GameScore <= -ScoreToWin.Value;
+        return GameScore >= _scoreToWin || GameScore <= -_scoreToWin;
     }
 
     public bool IsExtraRound()
@@ -285,14 +289,14 @@ public class GameManager : NetworkSingleton<GameManager>
     {
         if (clientId == P1ClientId.Value)
         {
-            P1WantsRestart.Value = true;
+            _p1WantsRestart = true;
         }
         else if (clientId == P2ClientId.Value)
         {
-            P2WantsRestart.Value = true;
+            _p2WantsRestart = true;
         }
 
-        if (P1WantsRestart.Value && P2WantsRestart.Value)
+        if (_p1WantsRestart && _p2WantsRestart)
         {
             NetworkManager.Singleton.SceneManager.LoadScene(SceneNames.GameScene, LoadSceneMode.Single);
         }
