@@ -23,21 +23,10 @@ public class StageManager : MonoBehaviour
     private void Start()
     {
         _gm = GameManager.Instance;
-        _gm.State.OnValueChanged += (oldVal, newVal) => OnGameStateChanged(oldVal, newVal);
+        _gm.OnStateChanged += UpdateStageState;
 
         _myCharacter.position = new Vector3(Bridge.Instance.GetBlockX(0, true), _myCharacter.position.y, _myCharacter.position.z);
         _enemyCharacter.position = new Vector3(Bridge.Instance.GetBlockX(0, false), _enemyCharacter.position.y, _enemyCharacter.position.z);
-    }
-
-    private void OnGameStateChanged(GameState oldState, GameState newState)
-    {
-        StartCoroutine(HandleStateChangeRoutine(newState));
-    }
-
-    private IEnumerator HandleStateChangeRoutine(GameState newState)
-    {
-        yield return null; // Wait one frame to ensure all state changes are processed
-        UpdateStageState(newState);
     }
 
     private void UpdateStageState(GameState newState)
@@ -62,7 +51,7 @@ public class StageManager : MonoBehaviour
 
             case GameState.Move:
                 MovePlayers();
-                if (_gm.IsDestroyPhase.Value && Math.Abs(CurrentScore) <= _gm.ScoreToWin.Value)
+                if (_gm.IsDestroyPhase.Value && Mathf.Abs(CurrentScore) <= _gm.ScoreToWin.Value)
                 {
                     Bridge.Instance.DestroyBlock();
                 }
@@ -81,8 +70,8 @@ public class StageManager : MonoBehaviour
         Vector3 myStartPos = _myCharacter.position;
         Vector3 enemyStartPos = _enemyCharacter.position;
 
-        float mytargetX = Bridge.Instance.GetBlockX(score, true);
-        Vector3 myTargetPos = new(mytargetX, myStartPos.y, myStartPos.z);
+        float myTargetX = Bridge.Instance.GetBlockX(score, true);
+        Vector3 myTargetPos = new(myTargetX, myStartPos.y, myStartPos.z);
 
         float enemyTargetX = Bridge.Instance.GetBlockX(score, false);
         Vector3 enemyTargetPos = new(enemyTargetX, enemyStartPos.y, enemyStartPos.z);
@@ -134,5 +123,10 @@ public class StageManager : MonoBehaviour
 
             yield return null;
         }
+    }
+
+    private void OnDestroy()
+    {
+        _gm.OnStateChanged -= UpdateStageState;
     }
 }

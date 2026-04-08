@@ -183,7 +183,7 @@ public class MainUI : MonoBehaviour
             float timeout = 10f, timer = 0f;
             while (!NetworkManager.Singleton.IsConnectedClient && timer < timeout)
             {
-                if (_cancelConnection) return;
+                if (_cancelConnection || this == null) return;
                 await System.Threading.Tasks.Task.Delay(100);
                 timer += 0.1f;
             }

@@ -32,18 +32,17 @@ public class GameManager : NetworkSingleton<GameManager>
 
     [NonSerialized] public NetworkVariable<ulong> P1ClientId = new(ulong.MaxValue);
     [NonSerialized] public NetworkVariable<ulong> P2ClientId = new(ulong.MaxValue);
-    [NonSerialized] public NetworkVariable<int> P1SubmitCount = new(0);
-    [NonSerialized] public NetworkVariable<int> P2SubmitCount = new(0);
 
     [NonSerialized] public NetworkVariable<int> P1Score = new(0);
     [NonSerialized] public NetworkVariable<int> P2Score = new(0);
-    [HideInInspector] public int GameScore => P1Score.Value - P2Score.Value;
 
     [NonSerialized] public NetworkVariable<bool> P1WantsRestart = new(false);
     [NonSerialized] public NetworkVariable<bool> P2WantsRestart = new(false);
 
     [NonSerialized] public NetworkVariable<int> ScoreToWin = new(0);
     //-----------------------------------------------------------------------------------------
+
+    public int GameScore => P1Score.Value - P2Score.Value;
 
     private RPS _p1Choice = RPS.None;
     private RPS _p2Choice = RPS.None;
@@ -143,9 +142,6 @@ public class GameManager : NetworkSingleton<GameManager>
     {
         _p1Choice = RPS.None;
         _p2Choice = RPS.None;
-
-        P1SubmitCount.Value = 0;
-        P2SubmitCount.Value = 0;
 
         if (RoundNum.Value == _maxRounds + 1)
         {
@@ -272,12 +268,10 @@ public class GameManager : NetworkSingleton<GameManager>
         if (targetPlayer == 1)
         {
             _p1Choice = choice;
-            P1SubmitCount.Value++;
         }
         else if (targetPlayer == 2)
         {
             _p2Choice = choice;
-            P2SubmitCount.Value++;
         }
         else
         {
@@ -314,17 +308,12 @@ public class GameManager : NetworkSingleton<GameManager>
         else // 상대가 있는데 재시작 요청 -> 서버로 재시작 요청 RPC 발송
         {
             OnWaitingForRestart?.Invoke();
-
-            // 서버로 재시작 요청 RPC 발송
-            // var mySender = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<PlayerInputSender>();
-            // mySender.SendRestartRequestToServer();
             RequestRestartRpc();
         }
     }
 
     public void ReturnToMainMenu()
     {
-        // NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
         NetworkManager.Singleton.Shutdown();
         SceneManager.LoadScene(SceneNames.MainMenu);
     }
@@ -360,10 +349,7 @@ public class GameManager : NetworkSingleton<GameManager>
     {
         if (NetworkManager.Singleton != null)
         {
-            if (IsServer)
-            {
-                NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
-            }
+            NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
             NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
         }
         base.OnDestroy();

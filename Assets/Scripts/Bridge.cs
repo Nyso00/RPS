@@ -1,5 +1,7 @@
 using UnityEngine;
 using System.Collections;
+using System.ComponentModel;
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -10,11 +12,16 @@ public class Bridge : Singleton<Bridge>
     public GameObject BlockPrefab;
 
     [Tooltip("다리의 한쪽 방향에 있을 블록 개수\n(= 게임 승리에 필요한 승점)")]
-    public int BlockCountOfOneSide = 5;
-    public float BlockSpacing = 2.0f;
+    [SerializeField] private int _blockCountOfOneSide = 5;
+    [SerializeField] private float _blockSpacing = 1.1f;
     [SerializeField] private float _blinkSpeed = 2.0f;
+    [SerializeField] private GameObject[] _blocks;
 
-    public GameObject[] Blocks;
+    // Getters
+    public int BlockCountOfOneSide => _blockCountOfOneSide;
+    public float BlockSpacing => _blockSpacing;
+
+    public GameObject[] Blocks => _blocks;
 
     private int _destroyedIdx = 0;
     private Coroutine _blinkCoroutine;
@@ -71,6 +78,13 @@ public class Bridge : Singleton<Bridge>
         Blocks[_destroyedIdx].SetActive(false);
         Blocks[Blocks.Length - _destroyedIdx - 1].SetActive(false);
     }
+
+#if UNITY_EDITOR
+    public void EditorSetBlocks(GameObject[] newBlocks)
+    {
+        _blocks = newBlocks;
+    }
+#endif
 }
 
 
@@ -112,20 +126,15 @@ public class BridgeEditor : Editor
             return;
         }
 
-        if (bridge.Blocks != null)
+        for (int i = bridge.transform.childCount - 1; i >= 0; i--)
         {
-            for (int i = 0; i < bridge.Blocks.Length; i++)
-            {
-                if (bridge.Blocks[i] != null)
-                {
-                    Undo.DestroyObjectImmediate(bridge.Blocks[i]);
-                }
-            }
+            GameObject child = bridge.transform.GetChild(i).gameObject;
+            Undo.DestroyObjectImmediate(child);
         }
 
         int blockCount = bridge.BlockCountOfOneSide * 2 + 2; // 양쪽 블록 개수 + 보이지 않는 양 끝 블록
 
-        bridge.Blocks = new GameObject[blockCount];
+        GameObject[] tempBlocks = new GameObject[blockCount];
 
         for (int i = 0; i < blockCount; i++)
         {
@@ -137,9 +146,10 @@ public class BridgeEditor : Editor
             newBlock.transform.SetParent(bridge.transform);
             newBlock.name = $"Block_{i}";
 
-            bridge.Blocks[i] = newBlock;
+            tempBlocks[i] = newBlock;
         }
 
+        bridge.EditorSetBlocks(tempBlocks);
         ArrangeBlocks(bridge);
 
         // 변경된 배열 데이터를 씬(Scene)에 확실히 저장하라고 유니티에 알림
@@ -167,7 +177,7 @@ public class BridgeEditor : Editor
         }
 
         bridge.Blocks[0].SetActive(false);
-        bridge.Blocks[bridge.Blocks.Length - 1].SetActive(false);
+        bridge.Blocks[^1].SetActive(false);
     }
 }
 #endif

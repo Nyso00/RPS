@@ -40,9 +40,14 @@ public class InGameHUD : MonoBehaviour
         _gm.OnStateChanged += UpdateUIState;
         _gm.OnPlayerSubmit += HandlePlayerSubmitted;
 
-        _gm.TimerFillAmount.OnValueChanged += (oldVal, newVal) => _timerGauge.fillAmount = newVal;
+        _gm.TimerFillAmount.OnValueChanged += UpdateTimerGauge;
 
         UpdateUIState(_gm.State.Value);
+    }
+
+    private void UpdateTimerGauge(float oldVal, float newVal)
+    {
+        _timerGauge.fillAmount = newVal;
     }
 
     private void UpdateUIState(GameState newState)
@@ -185,6 +190,7 @@ public class InGameHUD : MonoBehaviour
 
     private void OnDestroy()
     {
+        _gm.TimerFillAmount.OnValueChanged -= UpdateTimerGauge;
         _gm.OnStateChanged -= UpdateUIState;
         _gm.OnPlayerSubmit -= HandlePlayerSubmitted;
     }
