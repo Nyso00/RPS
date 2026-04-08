@@ -68,8 +68,7 @@ public class MainUI : MonoBehaviour
         _networkPanel.SetActive(true);
 
         // 1. 서버에 로그인하기 전까지는 버튼 비활성화
-        _hostButton.interactable = false;
-        _clientButton.interactable = false;
+        SetStartButtonsInteractable(false);
         _backButton.interactable = true;
         _statusText.text = GameStrings.ServerConnecting;
 
@@ -103,8 +102,7 @@ public class MainUI : MonoBehaviour
 
         // 3. 로그인이 완료시 버튼 활성화
         _statusText.text = GameStrings.ServerConnectSuccess;
-        _hostButton.interactable = true;
-        _clientButton.interactable = true;
+        SetStartButtonsInteractable(true);
     }
 
     private void OnBackButtonClicked()
@@ -113,9 +111,13 @@ public class MainUI : MonoBehaviour
         _networkPanel.SetActive(false);
         _modeSelectPanel.SetActive(true);
 
-        if (NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsClient)
+        if (NetworkManager.Singleton != null)
         {
-            NetworkManager.Singleton.Shutdown();
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+            if (NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsClient)
+            {
+                NetworkManager.Singleton.Shutdown();
+            }
         }
 
         // 서비스가 초기화되어 있고, 로그인 상태일 때만 로그아웃 진행
@@ -129,8 +131,7 @@ public class MainUI : MonoBehaviour
     private async void StartHostWithRelay()
     {
         _statusText.text = GameStrings.RoomCreating;
-        _hostButton.interactable = false;
-        _clientButton.interactable = false;
+        SetStartButtonsInteractable(false);
 
         try
         {
@@ -151,8 +152,7 @@ public class MainUI : MonoBehaviour
             if (_cancelConnection) return;
             _statusText.text = GameStrings.RoomCreateFailed;
             Debug.LogError($"Failed to create room: {e}");
-            _hostButton.interactable = true;
-            _clientButton.interactable = true;
+            SetStartButtonsInteractable(true);
         }
     }
 
@@ -166,8 +166,7 @@ public class MainUI : MonoBehaviour
         }
 
         _statusText.text = GameStrings.RoomJoining;
-        _hostButton.interactable = false;
-        _clientButton.interactable = false;
+        SetStartButtonsInteractable(false);
 
         try
         {
@@ -177,15 +176,68 @@ public class MainUI : MonoBehaviour
             RelayServerData relayServerData = joinAllocation.ToRelayServerData("dtls");
             NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(relayServerData);
 
+            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
             NetworkManager.Singleton.StartClient();
+
+            // 수동 타임아웃 (10s)
+            float timeout = 10f, timer = 0f;
+            while (!NetworkManager.Singleton.IsConnectedClient && timer < timeout)
+            {
+                if (_cancelConnection) return;
+                await System.Threading.Tasks.Task.Delay(100);
+                timer += 0.1f;
+            }
+
+            if (!NetworkManager.Singleton.IsConnectedClient)
+            {
+                Debug.LogError("Connection timed out.");
+                ForceDisconnect();
+            }
         }
         catch (RelayServiceException e)
         {
             if (_cancelConnection) return;
             _statusText.text = GameStrings.RoomJoinFailed;
             Debug.LogError($"Failed to connect to room: {e}");
+            SetStartButtonsInteractable(true);
+        }
+    }
+
+    private void OnClientDisconnected(ulong clientId)
+    {
+        if (clientId == NetworkManager.Singleton.LocalClientId)
+        {
+            ForceDisconnect();
+        }
+    }
+
+    private void ForceDisconnect()
+    {
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+            NetworkManager.Singleton.Shutdown();
+        }
+
+        if (!_cancelConnection)
+        {
+            _statusText.text = GameStrings.RoomJoinFailed;
             _hostButton.interactable = true;
             _clientButton.interactable = true;
+        }
+    }
+
+    private void SetStartButtonsInteractable(bool interactable)
+    {
+        _hostButton.interactable = interactable;
+        _clientButton.interactable = interactable;
+    }
+
+    private void OnDestroy()
+    {
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
         }
     }
 }

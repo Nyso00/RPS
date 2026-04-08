@@ -284,7 +284,7 @@ public class GameManager : NetworkSingleton<GameManager>
             Debug.LogWarning($"Received choice from unknown client ID: {clientId}");
         }
 
-        NotifySubmitClientRpc(targetPlayer);
+        NotifySubmitRpc(targetPlayer);
     }
 
     public void RequestRestartFromClient(ulong clientId)
@@ -316,8 +316,9 @@ public class GameManager : NetworkSingleton<GameManager>
             OnWaitingForRestart?.Invoke();
 
             // 서버로 재시작 요청 RPC 발송
-            var mySender = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<PlayerInputSender>();
-            mySender.SendRestartRequestToServer();
+            // var mySender = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<PlayerInputSender>();
+            // mySender.SendRestartRequestToServer();
+            RequestRestartRpc();
         }
     }
 
@@ -369,9 +370,23 @@ public class GameManager : NetworkSingleton<GameManager>
     }
 
 
-    [ClientRpc]
-    private void NotifySubmitClientRpc(int playerNum, ClientRpcParams rpcParams = default)
+    [Rpc(SendTo.ClientsAndHost)]
+    private void NotifySubmitRpc(int playerNum, RpcParams rpcParams = default)
     {
         OnPlayerSubmit?.Invoke(playerNum);
+    }
+
+    [Rpc(SendTo.Server)]
+    public void SubmitChoiceRpc(RPS choice, int playerNum, RpcParams rpcParams = default)
+    {
+        ulong senderId = rpcParams.Receive.SenderClientId;
+        SetPlayerChoice(senderId, choice, playerNum);
+    }
+
+    [Rpc(SendTo.Server)]
+    public void RequestRestartRpc(RpcParams rpcParams = default)
+    {
+        ulong senderId = rpcParams.Receive.SenderClientId;
+        RequestRestartFromClient(senderId);
     }
 }

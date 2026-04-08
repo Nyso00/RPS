@@ -3,6 +3,7 @@ using Unity.Netcode;
 public class InputManager : Singleton<InputManager>
 {
     private GameControls _controls;
+    private GameManager _gm;
 
     protected override void Awake()
     {
@@ -23,41 +24,39 @@ public class InputManager : Singleton<InputManager>
 
     private void Start()
     {
-        GameManager.Instance.State.OnValueChanged += (oldState, newState) =>
-        {
-            if (newState == GameState.Playing)
-            {
-                _controls.Enable();
-            }
-            else
-            {
-                _controls.Disable();
-            }
-        };
+        _gm = GameManager.Instance;
+        _gm.OnStateChanged += SwapControlEnabled;
     }
+
     private void TrySend(RPS choice, int playerNum)
     {
-        if (GameManager.Instance == null || NetworkManager.Singleton == null || !NetworkManager.Singleton.IsConnectedClient)
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsConnectedClient)
         {
             return;
         }
 
-        var playerObject = NetworkManager.Singleton.LocalClient?.PlayerObject;
-        if (playerObject == null)
+        if (_gm.State.Value != GameState.Playing)
         {
             return;
         }
+        _gm.SubmitChoiceRpc(choice, playerNum);
+    }
 
-        var mySender = playerObject.GetComponent<PlayerInputSender>();
-        if (mySender == null || GameManager.Instance.State.Value != GameState.Playing)
+    private void SwapControlEnabled(GameState state)
+    {
+        if (state == GameState.Playing)
         {
-            return;
+            _controls.Enable();
         }
-        mySender.SendChoiceToServer(choice, playerNum);
+        else
+        {
+            _controls.Disable();
+        }
     }
 
     protected override void OnDestroy()
     {
+        _gm.OnStateChanged -= SwapControlEnabled;
         _controls?.Dispose();
         base.OnDestroy();
     }

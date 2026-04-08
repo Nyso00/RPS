@@ -15,7 +15,7 @@ public static class GameStrings
 
     // MainUI - client
     public const string RoomJoining = "Connecting to room...";
-    public const string RoomJoinFailed = "Please check your code and try again.";
+    public const string RoomJoinFailed = "Failed to join room. Please check the code and try again.";
     public const string NoCodeInput = "Please enter a code.";
 
     // round states

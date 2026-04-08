@@ -7,7 +7,7 @@ using Unity.Netcode;
 public class InGameHUD : MonoBehaviour
 {
     [Header("게임 UI")]
-    [SerializeField] private GameObject _joinCodeDisplayText; // 방장이 참가 코드를 보여줄 텍스트
+    [SerializeField] private GameObject _joinCodeDisplayText;
     [SerializeField] private TextMeshProUGUI _roundText;
     [SerializeField] private Image _timerGauge;
     [SerializeField] private Image _myChoiceImage;
@@ -61,6 +61,7 @@ public class InGameHUD : MonoBehaviour
                 break;
 
             case GameState.ReadyForExtraRound:
+                HideChoiceImages();
                 _roundText.text = GameStrings.ReadyExtra;
                 break;
 
@@ -118,21 +119,8 @@ public class InGameHUD : MonoBehaviour
 
     private void ShowChoices()
     {
-        _myCheckMarkImage.fillAmount = 0f;
-        _enemyCheckMarkImage.fillAmount = 0f;
-
-        RPS myChoice, enemyChoice;
-
-        if (IsPlayer1)
-        {
-            myChoice = _gm.P1RevealedChoice.Value;
-            enemyChoice = _gm.P2RevealedChoice.Value;
-        }
-        else
-        {
-            myChoice = _gm.P2RevealedChoice.Value;
-            enemyChoice = _gm.P1RevealedChoice.Value;
-        }
+        RPS myChoice = IsPlayer1 ? _gm.P1RevealedChoice.Value : _gm.P2RevealedChoice.Value;
+        RPS enemyChoice = IsPlayer1 ? _gm.P2RevealedChoice.Value : _gm.P1RevealedChoice.Value;
 
         if (myChoice != RPS.None)
         {
