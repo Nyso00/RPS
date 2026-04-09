@@ -1,14 +1,13 @@
 using Unity.Netcode;
+using UnityEngine;
 
-public class InputManager : Singleton<InputManager>
+public class InputManager : MonoBehaviour
 {
     private GameControls _controls;
     private GameManager _gm;
 
-    protected override void Awake()
+    private void Awake()
     {
-        base.Awake();
-
         _controls = new GameControls();
         _controls.Player1.Rock.performed += ctx => TrySend(RPS.Rock, 1);
         _controls.Player1.Paper.performed += ctx => TrySend(RPS.Paper, 1);
@@ -54,10 +53,9 @@ public class InputManager : Singleton<InputManager>
         }
     }
 
-    protected override void OnDestroy()
+    private void OnDestroy()
     {
         _gm.OnStateChanged -= SwapControlEnabled;
         _controls?.Dispose();
-        base.OnDestroy();
     }
 }

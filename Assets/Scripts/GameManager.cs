@@ -64,7 +64,7 @@ public class GameManager : NetworkSingleton<GameManager>
     public override void OnNetworkSpawn()
     {
         // 구독
-        State.OnValueChanged += (oldState, newState) => StartCoroutine(DelayStateChange(newState));
+        State.OnValueChanged += OnStateValueChanged;
         NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
 
         _scoreToWin = Bridge.Instance.BlockCountOfOneSide;
@@ -96,6 +96,11 @@ public class GameManager : NetworkSingleton<GameManager>
         }
     }
 
+    private void OnStateValueChanged(GameState oldState, GameState newState)
+    {
+        StartCoroutine(DelayStateChange(newState));
+    }
+
     // NetworkVariable의 모든 변경이 마무리 되도록 1프레임 지연 후에 이벤트를 발생시킴
     private IEnumerator DelayStateChange(GameState newState)
     {
@@ -111,10 +116,10 @@ public class GameManager : NetworkSingleton<GameManager>
             _playRoundsCoroutine = StartCoroutine(PlayRounds());
         }
     }
-    
-// -----------------------------------------------------------------------------------------
-//   게임 진행 코루틴 모음
-// -----------------------------------------------------------------------------------------
+
+    // -----------------------------------------------------------------------------------------
+    //   게임 진행 코루틴 모음
+    // -----------------------------------------------------------------------------------------
     private IEnumerator PlayRounds()
     {
         State.Value = GameState.Ready;
@@ -207,9 +212,9 @@ public class GameManager : NetworkSingleton<GameManager>
         yield return new WaitForSeconds(MoveDuration);
     }
 
-// -----------------------------------------------------------------------------------------
-//   게임 진행 관련 함수 모음
-// -----------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------
+    //   게임 진행 관련 함수 모음
+    // -----------------------------------------------------------------------------------------
     private bool ShouldDestroyBlock()
     {
         bool shouldDestroyBlock = _currentDestroyPhase < _blockDestroyRounds.Length && RoundNum.Value == _blockDestroyRounds[_currentDestroyPhase];
@@ -297,9 +302,9 @@ public class GameManager : NetworkSingleton<GameManager>
         NotifySubmitRpc(targetPlayer);
     }
 
-// -----------------------------------------------------------------------------------------
-//   게임 재시작, 종료 관련 함수 모음
-// -----------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------
+    //   게임 재시작, 종료 관련 함수 모음
+    // -----------------------------------------------------------------------------------------
 
     // 둘 모두 재시작을 원할 경우(Play Again 버튼을 눌렀을 경우) 재시작
     private void RequestRestartFromClient(ulong clientId)
@@ -346,7 +351,7 @@ public class GameManager : NetworkSingleton<GameManager>
         NetworkManager.Singleton.Shutdown();
         SceneManager.LoadScene(SceneNames.MainMenu);
     }
-    
+
     private void OnClientDisconnected(ulong clientId)
     {
         // 내가 호스트인데 연결 끊김 / 내가 클라이언트인데 상대나 내가 끊김
@@ -377,6 +382,7 @@ public class GameManager : NetworkSingleton<GameManager>
 
     public override void OnDestroy()
     {
+        State.OnValueChanged -= OnStateValueChanged;
         if (NetworkManager.Singleton != null)
         {
             NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
@@ -385,9 +391,9 @@ public class GameManager : NetworkSingleton<GameManager>
         base.OnDestroy();
     }
 
-// -----------------------------------------------------------------------------------------
-//   RPCs
-// -----------------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------------
+    //   RPCs
+    // -----------------------------------------------------------------------------------------
 
     [Rpc(SendTo.ClientsAndHost)]
     private void NotifySubmitRpc(int playerNum, RpcParams rpcParams = default)
