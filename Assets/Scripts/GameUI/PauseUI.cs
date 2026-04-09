@@ -53,6 +53,7 @@ public class PauseUI : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (_gm == null) return;
         _gm.OnStateChanged -= OnGameOverState;
         _gm.OnMyDisconnect -= DisablePauseUI;
         _gm.OnOpponentDisconnect -= DisablePauseUI;

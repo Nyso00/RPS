@@ -17,6 +17,7 @@ public class StageManager : MonoBehaviour
     [SerializeField] private Volume _tensionVolume;
     [SerializeField] private float _heartbeatSpeed = 5.0f;
     private Coroutine _heartbeatCoroutine;
+    private Coroutine _moveCoroutine;
 
     private GameManager _gm;
     private bool IsPlayer1 => NetworkManager.Singleton.LocalClientId == _gm.P1ClientId.Value;
@@ -66,7 +67,11 @@ public class StageManager : MonoBehaviour
 
     private void MovePlayers()
     {
-        StartCoroutine(MoveCoroutine());
+        if (_moveCoroutine != null)
+        {
+            StopCoroutine(_moveCoroutine);
+        }
+        _moveCoroutine = StartCoroutine(MoveCoroutine());
     }
 
     private IEnumerator MoveCoroutine()
@@ -132,6 +137,7 @@ public class StageManager : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (_gm == null) return;
         _gm.OnStateChanged -= UpdateStageState;
         _gm.OnExecuteBlockDestroy -= ExecuteBlockDestroy;
     }

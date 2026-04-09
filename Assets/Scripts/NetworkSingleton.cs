@@ -4,10 +4,18 @@ using Unity.Netcode;
 public abstract class NetworkSingleton<T> : NetworkBehaviour where T : NetworkBehaviour
 {
     private static T _instance;
+    private static bool _isApplicationQuitting = false;
+
     public static T Instance
     {
         get
         {
+            if (_isApplicationQuitting)
+            {
+                Debug.LogWarning($"[NetworkSingleton] Instance of {typeof(T)} already destroyed on application quit. Returning null.");
+                return null;
+            }
+
             if (_instance == null)
             {
                 _instance = FindAnyObjectByType<T>() ?? new GameObject(typeof(T).Name).AddComponent<T>();
@@ -34,6 +42,7 @@ public abstract class NetworkSingleton<T> : NetworkBehaviour where T : NetworkBe
     {
         if (_instance == this)
         {
+            _isApplicationQuitting = true;
             _instance = null;
         }
 

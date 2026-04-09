@@ -7,7 +7,7 @@ using Unity.Netcode;
 public class InGameHUD : MonoBehaviour
 {
     [Header("게임 UI")]
-    [SerializeField] private GameObject _joinCodeDisplayText;
+    [SerializeField] private TextMeshProUGUI _joinCodeDisplayText;
     [SerializeField] private TextMeshProUGUI _roundText;
     [SerializeField] private Image _timerGauge;
     [SerializeField] private Image _myChoiceImage;
@@ -55,13 +55,13 @@ public class InGameHUD : MonoBehaviour
         switch (newState)
         {
             case GameState.WaitingForPlayers:
-                _joinCodeDisplayText.GetComponent<TextMeshProUGUI>().text = GameStrings.JoinCodeDisplay(MainUI.JoinCode);
-                _joinCodeDisplayText.SetActive(true);
+                _joinCodeDisplayText.text = GameStrings.JoinCodeDisplay(MainUI.JoinCode);
+                _joinCodeDisplayText.gameObject.SetActive(true);
                 _roundText.text = GameStrings.WaitingForPlayers;
                 break;
 
             case GameState.Ready:
-                _joinCodeDisplayText.SetActive(false);
+                _joinCodeDisplayText.gameObject.SetActive(false);
                 _roundText.text = GameStrings.Ready;
                 break;
 
@@ -190,6 +190,7 @@ public class InGameHUD : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (_gm == null) return;
         _gm.TimerFillAmount.OnValueChanged -= UpdateTimerGauge;
         _gm.OnStateChanged -= UpdateUIState;
         _gm.OnPlayerSubmit -= HandlePlayerSubmitted;

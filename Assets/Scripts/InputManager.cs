@@ -55,6 +55,7 @@ public class InputManager : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (_gm == null) return;
         _gm.OnStateChanged -= SwapControlEnabled;
         _controls?.Dispose();
     }

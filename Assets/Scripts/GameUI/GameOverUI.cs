@@ -56,6 +56,7 @@ public class GameOverUI : MonoBehaviour
 
     private void OnDestroy()
     {
+        if (_gm == null) return;
         _gm.OnStateChanged -= OnGameOverState;
         _gm.OnWaitingForRestart -= ShowWaitingState;
         _gm.OnMyDisconnect -= ShowMyDisconnectState;
