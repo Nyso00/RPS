@@ -14,7 +14,8 @@ public class GameManager : NetworkSingleton<GameManager>
     [SerializeField] private float _extraRoundStartDelay = 1.0f;
     [SerializeField] private float _extraRoundDuration = 5.0f;
     [SerializeField] private float _extraRoundDurationDecrement = 0.9f;
-    public float MoveDuration = 1.0f;
+    [SerializeField] private float _moveDuration = 1.0f;
+    public float MoveDuration => _moveDuration;
 
     [Header("라운드 변수")]
     [SerializeField] private int _maxRounds = 30;
@@ -209,7 +210,7 @@ public class GameManager : NetworkSingleton<GameManager>
         }
 
         State.Value = GameState.Move;
-        yield return new WaitForSeconds(MoveDuration);
+        yield return new WaitForSeconds(_moveDuration);
     }
 
     // -----------------------------------------------------------------------------------------
@@ -371,13 +372,14 @@ public class GameManager : NetworkSingleton<GameManager>
         }
     }
 
-    private void OnApplicationQuit()
+    protected override void OnApplicationQuit()
     {
         if (NetworkManager.Singleton != null &&
            (NetworkManager.Singleton.IsClient || NetworkManager.Singleton.IsServer))
         {
             NetworkManager.Singleton.Shutdown();
         }
+        base.OnApplicationQuit();
     }
 
     public override void OnDestroy()

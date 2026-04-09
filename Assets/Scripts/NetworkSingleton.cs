@@ -38,11 +38,15 @@ public abstract class NetworkSingleton<T> : NetworkBehaviour where T : NetworkBe
         }
     }
 
+    protected virtual void OnApplicationQuit()
+    {
+        _isApplicationQuitting = true;
+    }
+
     public override void OnDestroy()
     {
         if (_instance == this)
         {
-            _isApplicationQuitting = true;
             _instance = null;
         }
 

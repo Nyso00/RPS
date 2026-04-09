@@ -1982,7 +1982,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bbeb093e3ec17ea40ac751609a652698, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InGameHUD
-  _joinCodeDisplayText: {fileID: 785351812}
+  _joinCodeDisplayText: {fileID: 785351813}
   _roundText: {fileID: 447316021}
   _timerGauge: {fileID: 1930819931}
   _myChoiceImage: {fileID: 868824235}
@@ -3093,17 +3093,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NetworkGameManager
   ShowTopMostFoldoutHeaderGroup: 1
-  _startDelay: 1
-  _roundDuration: 2
+  _startDelay: 2
+  _roundDuration: 3
   _revealToMoveDelay: 0.5
   _moveToNextRoundDelay: 0.5
-  _extraRoundStartDelay: 1
+  _extraRoundStartDelay: 2
   _extraRoundDuration: 5
-  _extraRoundDurationDecrement: 0.9
-  MoveDuration: 1
-  _maxRounds: 10
+  _extraRoundDurationDecrement: 0.8
+  _moveDuration: 1
+  _maxRounds: 30
   _maxExtraRounds: 10
-  _blockDestroyRounds: 02000000040000000600000008000000
+  _blockDestroyRounds: 0f00000014000000190000001e000000
 --- !u!4 &873261310
 Transform:
   m_ObjectHideFlags: 0
@@ -5111,7 +5111,7 @@ GameObject:
   - component: {fileID: 1825493262}
   - component: {fileID: 1825493261}
   m_Layer: 0
-  m_Name: VisualManager
+  m_Name: StageManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
