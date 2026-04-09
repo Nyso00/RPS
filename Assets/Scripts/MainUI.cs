@@ -22,6 +22,7 @@ public class MainUI : MonoBehaviour
     [Header("모드 선택 UI")]
     [SerializeField] private Button _localModeButton;
     [SerializeField] private Button _onlineModeButton;
+    [SerializeField] private Button _quitButton;
 
 
     [Header("네트워크 UI")]
@@ -41,6 +42,7 @@ public class MainUI : MonoBehaviour
         // 버튼에 함수 부착
         _localModeButton.onClick.AddListener(OnLocalModeSelected);
         _onlineModeButton.onClick.AddListener(OnOnlineModeSelected);
+        _quitButton.onClick.AddListener(OnQuitButtonClicked);
         _backButton.onClick.AddListener(OnBackButtonClicked);
 
         _hostButton.onClick.AddListener(StartHostWithRelay);
@@ -105,6 +107,16 @@ public class MainUI : MonoBehaviour
         _statusText.text = GameStrings.ServerConnectSuccess;
         SetStartButtonsInteractable(true);
     }
+
+    private void OnQuitButtonClicked()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
+
 
     private void OnBackButtonClicked()
     {
